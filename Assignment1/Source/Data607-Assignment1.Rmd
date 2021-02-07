@@ -1,0 +1,173 @@
+---
+title: 'Data 607 : Assignment 1'
+author: "Ramnivas Singh"
+date: "02/06/2021"
+output:   
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: true
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+**Mushroom Data Set**
+This data set sourced from the UCI repository of machine learning databases. Hypothetical samples corresponding to 23 species of gilled mushrooms in the Agaricus and Lepiota family are categorized as either poisonous or edible based on physical attributes. More information is available at [Mushroom Data Set Repository link](https://archive.ics.uci.edu/ml/datasets/mushroom)
+
+## Task Summary
+Task below to be performed using R and RStudio for this assignment. R Markdown (.Rmd) file to be published to rpubs.com and saved in GitHub repository.
+
+* Source mushroom dataset
+* Create Data frame of selected columns
+* Add column names
+* Replace abbreviations
+* Logical rules for mushroom data sets
+
+### Source mushroom dataset
+This step is to source the data set in R program from github location 
+
+```{r}
+library (readr)
+count<-3
+dataUrl="https://raw.githubusercontent.com/rnivas2028/MSDS/Data607/Assignment1/DataSet/agaricus-lepiota.data"
+dataSet <- read.csv(dataUrl, header = FALSE, sep = ",", stringsAsFactors = FALSE)
+```
+Lets find how many rows and columns in original dataset
+```{r}
+dim(dataSet)
+head(dataSet,count)
+tail(dataSet, count)
+```
+### Create sub dataset
+```{r}
+dataSubSet <- subset(dataSet, select = c(1, 4, 6, 7, 8, 9, 10, 14, 15, 21, 22, 23))
+dim(dataSubSet)
+head(dataSubSet,count)
+tail(dataSubSet, count)
+```
+### Add column names
+```{r}
+colnames(dataSubSet) <- c("classes", "capColor", "odor", "gillAttachment", "gillSpacing", "gillSize", "gillColor", "stalkSurfaceBelowRing", "stalkColorAboveRing", "sporePrintColor", "population", "habitat")
+head(dataSubSet)
+```
+### Replace abbreviations
+```{r}
+dataSubSet$classes[dataSubSet$classes == "p"] <- "poisonous"
+dataSubSet$classes[dataSubSet$classes == "e"] <- "edible"
+dataSubSet$capColor[dataSubSet$capColor == "n"] <- "brown"
+dataSubSet$capColor[dataSubSet$capColor == "b"] <- "buff"
+dataSubSet$capColor[dataSubSet$capColor == "c"] <- "cinnamon"
+dataSubSet$capColor[dataSubSet$capColor == "g"] <- "gray"
+dataSubSet$capColor[dataSubSet$capColor == "r"] <- "green"
+dataSubSet$capColor[dataSubSet$capColor == "p"] <- "pink"
+dataSubSet$capColor[dataSubSet$capColor == "u"] <- "purple"
+dataSubSet$capColor[dataSubSet$capColor == "e"] <- "red"
+dataSubSet$capColor[dataSubSet$capColor == "w"] <- "white"
+dataSubSet$capColor[dataSubSet$capColor == "y"] <- "yellow"
+dataSubSet$odor[dataSubSet$odor == "a"] <- "almond"
+dataSubSet$odor[dataSubSet$odor == "l"] <- "anise"
+dataSubSet$odor[dataSubSet$odor == "c"] <- "creosote"
+dataSubSet$odor[dataSubSet$odor == "y"] <- "fishy"
+dataSubSet$odor[dataSubSet$odor == "f"] <- "foul"
+dataSubSet$odor[dataSubSet$odor == "m"] <- "musty"
+dataSubSet$odor[dataSubSet$odor == "n"] <- "none"
+dataSubSet$odor[dataSubSet$odor == "p"] <- "pungent"
+dataSubSet$odor[dataSubSet$odor == "s"] <- "spicy"
+dataSubSet$stalkSurfaceBelowRing[dataSubSet$stalkSurfaceBelowRing == "f"] <- "fibrous"
+dataSubSet$stalkSurfaceBelowRing[dataSubSet$stalkSurfaceBelowRing == "y"] <- "scaly"
+dataSubSet$stalkSurfaceBelowRing[dataSubSet$stalkSurfaceBelowRing == "k"] <- "silky"
+dataSubSet$stalkSurfaceBelowRing[dataSubSet$stalkSurfaceBelowRing == "s"] <- "smooth"
+dataSubSet$stalkColorAboveRing[dataSubSet$stalkColorAboveRing == "n"] <- "brown"
+dataSubSet$stalkColorAboveRing[dataSubSet$stalkColorAboveRing == "b"] <- "buff"
+dataSubSet$stalkColorAboveRing[dataSubSet$stalkColorAboveRing == "c"] <- "cinnamon"
+dataSubSet$stalkColorAboveRing[dataSubSet$stalkColorAboveRing == "g"] <- "gray"
+dataSubSet$stalkColorAboveRing[dataSubSet$stalkColorAboveRing == "r"] <- "green"
+dataSubSet$stalkColorAboveRing[dataSubSet$stalkColorAboveRing == "p"] <- "pink"
+dataSubSet$stalkColorAboveRing[dataSubSet$stalkColorAboveRing == "u"] <- "purple"
+dataSubSet$stalkColorAboveRing[dataSubSet$stalkColorAboveRing == "e"] <- "red"
+dataSubSet$stalkColorAboveRing[dataSubSet$stalkColorAboveRing == "w"] <- "white"
+dataSubSet$stalkColorAboveRing[dataSubSet$stalkColorAboveRing == "y"] <- "yellow"
+dataSubSet$sporePrintColor[dataSubSet$sporePrintColor == "k"] <- "black"
+dataSubSet$sporePrintColor[dataSubSet$sporePrintColor == "n"] <- "brown"
+dataSubSet$sporePrintColor[dataSubSet$sporePrintColor == "b"] <- "buff"
+dataSubSet$sporePrintColor[dataSubSet$sporePrintColor == "h"] <- "chocolate"
+dataSubSet$sporePrintColor[dataSubSet$sporePrintColor == "r"] <- "green"
+dataSubSet$sporePrintColor[dataSubSet$sporePrintColor == "o"] <- "orange"
+dataSubSet$sporePrintColor[dataSubSet$sporePrintColor == "u"] <- "purple"
+dataSubSet$sporePrintColor[dataSubSet$sporePrintColor == "w"] <- "white"
+dataSubSet$sporePrintColor[dataSubSet$sporePrintColor == "y"] <- "yellow"
+dataSubSet$population[dataSubSet$population == "a"] <- "abundant"
+dataSubSet$population[dataSubSet$population == "c"] <- "clustered"
+dataSubSet$population[dataSubSet$population == "n"] <- "numerous"
+dataSubSet$population[dataSubSet$population == "s"] <- "scattered"
+dataSubSet$population[dataSubSet$population == "v"] <- "several"
+dataSubSet$population[dataSubSet$population == "y"] <- "solitary"
+dataSubSet$habitat[dataSubSet$habitat == "g"] <- "grasses"
+dataSubSet$habitat[dataSubSet$habitat == "l"] <- "leaves"
+dataSubSet$habitat[dataSubSet$habitat == "m"] <- "meadows"
+dataSubSet$habitat[dataSubSet$habitat == "p"] <- "paths"
+dataSubSet$habitat[dataSubSet$habitat == "u"] <- "urban"
+dataSubSet$habitat[dataSubSet$habitat == "w"] <- "waste"
+dataSubSet$habitat[dataSubSet$habitat == "d"] <- "woods"
+head(dataSubSet)
+```
+
+## Logical rules for mushroom data sets
+
+Disjunctive rules for poisonous mushrooms, from most general to most specific:
+
+P_1) odor=NOT(almond.OR.anise.OR.none)
+
+```{r}
+p1_ordorDataSet <- subset(dataSubSet, !(odor %in% c("almond","anise","none")))
+nrow(p1_ordorDataSet)
+```
+
+P_2) spore-print-color=green
+```{r}
+p2_sporePrintColorDataSet <- subset(dataSubSet, sporePrintColor == "green")
+nrow(p2_sporePrintColorDataSet)
+```
+P_3) odor=none.AND.stalk-surface-below-ring=scaly.AND.(stalk-color-above-ring=NOT.brown)
+```{r}
+p3_ordorDataSet <- subset(dataSubSet, (odor == "none" & stalkSurfaceBelowRing == "scaly") & stalkColorAboveRing != "brown")
+nrow(p3_ordorDataSet)
+```
+P_4) habitat=leaves.AND.cap-color=white
+or
+P_4) population=clustered.AND.cap_color=white
+```{r}
+p4a_habitatDataSet <- subset(dataSubSet, habitat == "leaves" & capColor == "white")
+nrow(p4a_habitatDataSet)
+p4a_population <- subset(dataSubSet, population == "clustered" & capColor == "white")
+nrow(p4a_population)
+```
+
+
+## Conclusions
+
+Below are findings after applying disjunctive rules on data set for poisonous mushrooms
+```{r}
+poisonouMushCunt<-sum(nrow(p1_ordorDataSet), nrow(p2_sporePrintColorDataSet), nrow(p3_ordorDataSet), nrow(p4a_habitatDataSet));
+print(poisonouMushCunt)
+edibleDataSubSet <- subset(dataSubSet, (classes == 'edible'))
+nrow(edibleDataSubSet)
+poisonousDataSubSet <- subset(dataSubSet, (classes == 'poisonous'))
+nrow(poisonousDataSubSet)
+```
+Count of poisonous mushrooms from these rules is same as in original data set.
+
+Percentage of poisonous mushrooms is:
+```{r}
+pctPoisnousMushrooms<-poisonouMushCunt/nrow(dataSubSet)*100
+print(pctPoisnousMushrooms)
+pctEdibleMushrooms<-100-pctPoisnousMushrooms
+print(pctEdibleMushrooms)
+
