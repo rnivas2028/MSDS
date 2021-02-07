@@ -150,7 +150,6 @@ p4a_population <- subset(dataSubSet, population == "clustered" & capColor == "wh
 nrow(p4a_population)
 ```
 
-
 ## Conclusions
 
 Below are findings after applying disjunctive rules on data set for poisonous mushrooms
