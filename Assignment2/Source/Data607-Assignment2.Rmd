@@ -1,0 +1,301 @@
+---
+title: 'Data 607 : Assignment 2 - Movie Ratings'
+author: "Ramnivas Singh"
+date: "02/14/2021"
+output:   
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: true
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+Choose six recent popular movies. Ask at least five people that you know (friends, family, classmates, imaginary friends if necessary) to rate each of these movies that they have seen on a scale of 1 to 5. Take the results (observations) and store them in a SQL database of your choosing. Load the information from the SQL database into an R dataframe.
+
+## Considerations
+* This is by design a very open-ended assignment
+* This assignment does not need to be 100% reproducible.
+* Handling missing data is a foundational skill when working with SQL or R.
+* Find ways to make solution better
+* Logical rules for mushroom data sets
+
+## Summary
+
+Most popular movies from 2018 to 2021 are picked up for this. Not all the users (rators) would have watched all the movies, so I decided to use 9 movies for survey. SurveyMonkey online tool is used to collect ratings from 20 users. Following task to be performed for this assignment.
+
+* Data Collection
+* Database Objects
+* Importing and Preparing Data
+* Reproducibility 
+* Analysis
+* Documentation
+* Conclusion
+
+### Data Collection
+A survey is performed to collect movie ratings from various people. This survey include 10 questions to find -  
+* Preferred mode of watching movies\
+* Rating of listed 9 movies\
+* Survey was answered by 20 people by using a SurveyMonkey(https://www.surveymonkey.com/r/G6N2ZZL)
+
+### Database Objects
+* movies : This table gives the movie id, movie name and year of the movie
+* users : Users table provides a user id and name for each individual participated in the survey
+* ratings : The ratings table has rating id and description. Rating 5=Really like where as 1=Really dislike
+* preference : This table is used to provide preference of the users to watch a movie (Cinema, DVD, online ect.)
+* user_preference : This table provides each users preference to watch a movie with 
+* user_movie_rating : This table is key table to provide each users rating on 9 movies.
+
+Each key table has a primary key except user_movie_rating table which has userId repeated for each movie. Tables user_preference and user_movie_rating has foreign keys defined to maintain database normalization. 
+
+```{r, echo=FALSE}
+# Define variable containing url
+url <- "https://raw.githubusercontent.com/rnivas2028/MSDS/Data607/Assignment2/entity-relationship/er_design.png"
+```
+
+#### Database Design
+Following is entity relationship design to show objects, attributes and associations between objects.
+
+<left><img src="`r url`"></left>
+
+#### Create database
+```
+DROP DATABASE IF EXISTS movie_ratings;
+CREATE DATABASE `movie_ratings`
+USE movie_ratings;
+```
+#### Create tables
+```
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS movies;
+DROP TABLE IF EXISTS ratings;
+DROP TABLE IF EXISTS preference;
+DROP TABLE IF EXISTS user_movie_rating;
+DROP TABLE IF EXISTS user_preference;
+
+CREATE TABLE `users` (
+  `userId` int NOT NULL,
+  `user_name` varchar(100) DEFAULT NULL,
+  `addedOn` datetime DEFAULT NULL,
+  `addedBy` varchar(100) DEFAULT NULL,
+  `updatedOn` datetime DEFAULT NULL,
+  `updatedBy` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`userId`)
+);
+
+CREATE TABLE `movies` (
+  `movieId` int NOT NULL,
+  `movie_name` varchar(100) DEFAULT NULL,
+  `year` int DEFAULT NULL,
+  `addedOn` datetime DEFAULT NULL,
+  `addedBy` varchar(100) DEFAULT NULL,
+  `updatedOn` datetime DEFAULT NULL,
+  `updatedBy` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`movieId`)
+);
+
+CREATE TABLE `ratings` (
+  `rating` int NOT NULL,
+  `rating_desc` varchar(100) DEFAULT NULL,
+  `addedOn` datetime DEFAULT NULL,
+  `addedBy` varchar(100) DEFAULT NULL,
+  `updatedOn` datetime DEFAULT NULL,
+  `updatedBy` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`rating`)
+ );
+
+CREATE TABLE `preference` (
+  `preferenceId` int NOT NULL,
+  `preference` varchar(100) DEFAULT NULL,
+  `addedOn` datetime DEFAULT NULL,
+  `addedBy` varchar(100) DEFAULT NULL,
+  `updatedOn` datetime DEFAULT NULL,
+  `updatedBy` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`preferenceId`)
+);
+
+CREATE TABLE `user_movie_rating` (
+  `userId` int NOT NULL,
+  `movieId` int NOT NULL,
+  `rating` int DEFAULT NULL,
+  `addedOn` datetime DEFAULT NULL,
+  `addedBy` varchar(100) DEFAULT NULL,
+  `updatedOn` datetime DEFAULT NULL,
+  `updatedBy` varchar(100) DEFAULT NULL,
+  KEY `userId_idx` (`userId`),
+  KEY `movieId_idx` (`movieId`),
+  KEY `rating_idx` (`rating`),
+  CONSTRAINT `movieId` FOREIGN KEY (`movieId`) REFERENCES `movies` (`movieId`),
+  CONSTRAINT `rating` FOREIGN KEY (`rating`) REFERENCES `ratings` (`rating`),
+  CONSTRAINT `userId` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`)
+);
+
+CREATE TABLE `user_preference` (
+  `userId` int NOT NULL,
+  `preferenceId` int NOT NULL,
+  `addedOn` datetime DEFAULT NULL,
+  `addedBy` varchar(100) DEFAULT NULL,
+  `updatedOn` datetime DEFAULT NULL,
+  `updatedBy` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`userId`),
+  KEY `preferenceId_idx` (`preferenceId`),
+  CONSTRAINT `preferenceId` FOREIGN KEY (`preferenceId`) REFERENCES `preference` (`preferenceId`),
+  CONSTRAINT `userIdx` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`)
+);
+
+```
+### Importing and preparing data
+```
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\users.csv' 
+INTO TABLE users 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\movies.csv' 
+INTO TABLE movies 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\ratings.csv' 
+INTO TABLE ratings 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\preference.csv' 
+INTO TABLE preference 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\user_movie_rating.csv' 
+INTO TABLE user_movie_rating 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA INFILE 'C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\user_preference.csv' 
+INTO TABLE user_preference 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+```
+### Reproducibility
+
+Reproducibility for this assignment can be accomplished in two steps:\
+1. Run movies_ratings.sql from GitHub. Script can be accessed from this [Github Location](https://github.com/rnivas2028/MSDS/blob/Data607/Assignment2/database-scripts/movie_ratings.sql)
+
+2. Following files also needed to run movies_ratings.sql
+* movies.csv
+* preference.csv
+* ratings.csv
+* users.csv
+* user_movie_rating.csv
+* user_preference.csv
+
+3. Run R Markdown file in R Studio.
+
+#### R and MySQL Database Integration
+Password less code - R is connected to MySQL database using RMySQL Database Interface driver. While running R Markdown, database user and password is asked.
+
+#### Connect to movie rating database
+Using provided database user and password, a connection to MySQL Database is made. Database query executed to select movie, users and rating data set
+```{r}
+library(RMySQL)
+dbUser <- rstudioapi::askForPassword("Database username")
+dbPassword <- rstudioapi::askForPassword("Database password")
+connection = dbConnect(MySQL(), user = dbUser, password = dbPassword, dbname = 'movie_ratings', host = 'localhost')
+sqlQuery='SELECT  usr.user_name, mv.movie_name, rt.rating FROM movie_ratings.user_movie_rating umr JOIN movies mv ON mv.movieId=umr.movieId JOIN users usr ON usr.userId=umr.userId JOIN ratings rt ON rt.rating=umr.rating'
+result = dbSendQuery(connection, sqlQuery)
+```
+#### Store the result data frame
+Movie, users and rating data set is used to create Data Frame
+```{r}
+data.frame = fetch(result)
+summary(data.frame)
+movie.reviews <- as.data.frame(data.frame)
+```
+
+#### Data Analysis
+So far we have created a database with tables and loaded the data into these tables. We also have connected R with MySQL database and selected Movie, users and rating data set to to create Data Frame. Now data frame is ready and we will be performing data analysis.\ This analysis contains
+* Average rating for each movie in survey\
+* Average rating given by each user\
+* Most preferred mode to watch a movie
+
+##### Average rating for each movie in survey 
+
+```{r}
+mean.movie<- aggregate(rating ~ movie_name, movie.reviews, mean)
+mean.movie
+```
+This metric show  - 'Avengers: Endgame' as highest rated where as Space Sweepers as lowest rated movie
+
+
+##### Average movie rating
+Bar plot is used to to show average movie rating
+```{r}
+library(ggplot2)
+PivotData = aggregate(rating ~ movie_name, data=movie.reviews,mean)
+ggplot(data=PivotData, aes(x=(reorder(movie_name, rating)), y = rating, label = rating))+
+  geom_bar(stat="identity", fill="#FF6666")+ coord_flip()+
+  labs(title="Average movie rating", x= "Average Rating", y = "Movie")+
+  geom_text(aes(label=round(rating, digits = 2)))+
+  theme(plot.title=element_text(hjust=0.5))
+
+```
+
+##### Average rating by user
+Bar plot is used to show average rating by user
+```{r}
+mean.user<- aggregate(rating ~ user_name, movie.reviews, mean)
+mean.user
+```
+Lets use Bar plot show average rating by user
+```{r}
+PivotData = aggregate(rating ~ user_name, data=movie.reviews,mean)
+ggplot(data=PivotData, aes(x=(reorder(user_name, rating)), y = rating, label = rating))+
+  geom_bar(stat="identity", fill="#FF6666")+
+  coord_flip()+
+  labs(title="Average rating by user", x= "User", y = "Average Rating")+
+  geom_text(aes(label=round(rating, digits = 2)))+
+  theme(plot.title=element_text(hjust=0.5))
+
+```
+Lets drill down to next level to see rating on each movie given by individual users
+```{r}
+ggplot(data=movie.reviews, aes(x=movie_name, y = rating, fill = movie_name, label = rating))+
+    geom_bar(stat="identity")+ facet_wrap(~user_name)+ ggtitle("Movie ratings by user")+
+    theme(axis.text.x = element_blank(),plot.title = element_text(hjust=1),legend.position = "right")
+```
+
+##### Most preferred mode to watch a movie
+```{r}
+sqlQuery='SELECT pr.preference, count(*) as count FROM movie_ratings.user_preference up JOIN preference pr on pr.preferenceId=up.preferenceId group by up.preferenceId'
+result = dbSendQuery(connection, sqlQuery)
+prefData.frame = fetch(result)
+prefData.frame
+```
+* 16 users preferred to watch movie online\
+* Only 4 users preferred to watch in Cinema\
+* No users liked to watch on DVD on TV telecast
+
+##  Conclusion
+By seeing average movie ratings and average rating by the users, listed below are conclusions:\
+* 'Avengers: Endgame' is highest rated where as Space Sweepers as lowest rated movie\
+* Steve watched most of the movies and liked most of the movies\
+* Most users preferred to watch movie online instead going to Cinema or watching on DVD or TV telecast 
