@@ -298,4 +298,5 @@ prefData.frame
 By seeing average movie ratings and average rating by the users, listed below are conclusions:\
 * 'Avengers: Endgame' is highest rated where as Space Sweepers as lowest rated movie\
 * Steve watched most of the movies and liked most of the movies\
-* Most users preferred to watch movie online instead going to Cinema or watching on DVD or TV telecast 
+* Most users preferred to watch movie online instead going to Cinema or watching on DVD or TV telecast\
+* I feel there should have been a another category 'Didn't watch' to further collect more ratings. That would have improved average ratings for other movies.
