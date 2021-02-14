@@ -1,0 +1,5 @@
+preferenceId,preference,addedOn,addedBy,updatedOn,updatedBy
+1,Cinema,2021-02-14,Admin,NULL,NULL
+2,DVD,2021-02-14,Admin,NULL,NULL
+3,Online,2021-02-14,Admin,NULL,NULL
+4,TV Viewings,2021-02-14,Admin,NULL,NULL

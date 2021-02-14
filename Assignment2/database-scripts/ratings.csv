@@ -1,0 +1,6 @@
+rating,rating_desc,addedOn,addedBy,updatedOn,updatedBy
+5,Really like,2021-02-14,Admin,NULL,NULL
+4,Like,2021-02-14,Admin,NULL,NULL
+3,Neither like nor dislike,2021-02-14,Admin,NULL,NULL
+2,Dislike,2021-02-14,Admin,NULL,NULL
+1,Really dislike,2021-02-14,Admin,NULL,NULL

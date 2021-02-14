@@ -1,0 +1,10 @@
+movieId,name,year,addedOn,addedBy,updatedOn,updatedBy
+1,Alladin,2019,2021-02-14,Admin,NULL,NULL
+9,Avengers: Endgame,2020,2021-02-14,Admin,NULL,NULL
+8,Avengers: Infinity War,2020,2021-02-14,Admin,NULL,NULL
+4,Deadpool 2,2018,2021-02-14,Admin,NULL,NULL
+5,Joker,2019,2021-02-14,Admin,NULL,NULL
+6,Mulan,2020,2021-02-14,Admin,NULL,NULL
+3,Space Sweepers,2018,2021-02-14,Admin,NULL,NULL
+7,Tenet,2021,2021-02-14,Admin,NULL,NULL
+2,The Midnight Sky,2019,2021-02-14,Admin,NULL,NULL
