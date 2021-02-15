@@ -1,0 +1,120 @@
+---
+title: 'Data 607 : Assignment 2 - Tidyverse Create'
+author: "Ramnivas Singh"
+date: "02/14/2021"
+output:   
+  html_document:
+    theme: default
+    highlight: espress
+    toc: true
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+Task here is to Create an example. Using one or more TidyVerse packages, and any dataset from fivethirtyeight.com or Kaggle, create a programming sample “vignette” that demonstrates how to use one or more of the capabilities of the selected TidyVerse package with your selected dataset.
+I picked up 'COVID-19 World Vaccination Progress' dataset from [Kaggle](https://www.kaggle.com/gpreda/covid-world-vaccination-progress)
+
+## Summary
+The worldwide endeavor to create a safe and effective COVID-19 vaccine is bearing fruit. A handful of vaccines now have been authorized around the globe; many more remain in development.The biggest vaccination campaign in history is underway. More than 172 million doses have been administered across 77 countries, according to data collected by Bloomberg. The latest rate was roughly 5.92 million doses a day. To bring this pandemic to an end, a large share of the world needs to be immune to the virus.
+in this assignment, Kaggle dataset will be used for analysis to apply Tidyverse capabilities.
+
+## Tidyverse
+The tidyverse is a coherent system of packages for data manipulation, exploration and visualization that share a common design philosophy. Tidyverse packages are intended to make statisticians and data scientists more productive by guiding them through workflows that facilitate communication, and result in reproducible work products.
+
+```
+Data Wrangling and Transformation
+* dplyr
+* tidyr 
+* stringr
+* forcats
+Data Import and Management
+* tibble
+* readr 
+Functional Programming
+* purrr
+Data Visualization and Exploration
+* ggplot2
+
+```
+More information on tidyverse can be found [here](https://tidyverse.org)
+
+## Data Collection
+Data set from [Kaggle](https://www.kaggle.com/gpreda/covid-world-vaccination-progress) is used for this assignment. 
+
+## Load tidyverse packages
+```{r}
+library(tidyverse) # Load all "tidyverse" libraries.
+# OR
+# library(readr)   # Read tabular data.
+# library(tidyr)   # Data frame tidying functions.
+# library(dplyr)   # General data frame manipulation.
+# library(ggplot2) # Flexible plotting.
+library(viridis)   # Viridis color scale.
+
+```
+
+## Load Vaccination Progress data
+
+```{r}
+#Source: https://www.kaggle.com/gpreda/covid-world-vaccination-progress/download
+url='https://raw.githubusercontent.com/rnivas2028/MSDS/Data607/Tidyverse/country_vaccinations.csv'
+country_vaccinations <- read.csv(url(url))
+```
+## Tidyverse capabilities
+### glimpse
+To look at the variable names and types
+```{r}
+glimpse(country_vaccinations)
+```
+
+### summary
+To get an overview of data set
+```{r}
+summary(country_vaccinations)
+```
+
+### select
+To get selected columns from a large data sets with many columns
+```{r}
+head(country_vaccinations%>%select(country, total_vaccinations,	people_vaccinated,	people_fully_vaccinated),5)
+
+```
+
+### rename
+To rename columns in a data set
+```{r}
+head(rename(country_vaccinations, 'Total Vaccinations'=total_vaccinations),5)
+
+```
+
+### sample_n
+To pick random sample from the data set
+```{r}
+head(sample_n(country_vaccinations, 5))
+
+```
+### group_by
+To group data set into smaller data groups
+```{r}
+by_country <- group_by(country_vaccinations, country)
+summarise <- summarise(by_country, count = n(),
+country_vaccinations_mean = mean(total_vaccinations, na.rm = TRUE))
+by_country <-head(summarise %>% arrange(desc(country_vaccinations_mean)))
+```
+
+### ggplot 
+```{r}
+ggplot(by_country, aes(x=country_vaccinations_mean, y=country)) + geom_point()
+ggplot(data=by_country, aes(x=(reorder(country, country_vaccinations_mean)), y = country_vaccinations_mean))+
+  geom_bar(stat="identity", fill="#FF6600")+ coord_flip()+
+  labs(title="Average of country vaccinations", x= "Country", y = "Country Vaccinations Mean")+
+  geom_text(aes(label=round(country_vaccinations_mean, digits = 2)))+
+  theme(plot.title=element_text(hjust=0.5))
+```
