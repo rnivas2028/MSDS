@@ -252,7 +252,7 @@ Bar plot is used to to show average movie rating
 library(ggplot2)
 PivotData = aggregate(rating ~ movie_name, data=movie.reviews,mean)
 ggplot(data=PivotData, aes(x=(reorder(movie_name, rating)), y = rating, label = rating))+
-  geom_bar(stat="identity", fill="#FF6666")+ coord_flip()+
+  geom_bar(stat="identity", fill="#FF6600")+ coord_flip()+
   labs(title="Average movie rating", x= "Average Rating", y = "Movie")+
   geom_text(aes(label=round(rating, digits = 2)))+
   theme(plot.title=element_text(hjust=0.5))
@@ -269,7 +269,7 @@ Lets use Bar plot show average rating by user
 ```{r}
 PivotData = aggregate(rating ~ user_name, data=movie.reviews,mean)
 ggplot(data=PivotData, aes(x=(reorder(user_name, rating)), y = rating, label = rating))+
-  geom_bar(stat="identity", fill="#FF6666")+
+  geom_bar(stat="identity", fill="#FF6600")+
   coord_flip()+
   labs(title="Average rating by user", x= "User", y = "Average Rating")+
   geom_text(aes(label=round(rating, digits = 2)))+
