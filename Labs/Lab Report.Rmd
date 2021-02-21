@@ -1,0 +1,173 @@
+---
+title: "Lab 2 : Introduction to data"
+author: "Ramnivas Singh"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE, fig.show = "show", message = TRUE, warning = FALSE)
+library(tidyverse)
+library(openintro)
+```
+\
+
+# Initial data load
+```{r load-data}
+data(nycflights)
+```
+
+```{r names}
+names(nycflights)
+```
+```{r}
+glimpse(nycflights)
+```
+
+# Plot Histogram
+
+# Analysis
+
+Let's start by examing the distribution of departure delays of all flights with a 
+histogram.
+
+## Histogram 1
+```{r hist-dep-delay}
+ggplot(data = nycflights, aes(x = dep_delay)) +
+  geom_histogram()
+```
+
+## Histogram 2
+```{r hist-dep-delay-bins15}
+ggplot(data = nycflights, aes(x = dep_delay)) +
+  geom_histogram(binwidth = 15)
+```
+
+## Histogram 2
+```{r hist-dep-delay-bins150}
+ggplot(data = nycflights, aes(x = dep_delay)) +
+  geom_histogram(binwidth = 150)
+```
+
+## Exercise 1
+Look carefully at these three histograms. How do they compare? Are features
+revealed in one that are obscured in another?
+
+We notice that the smaller the binwidth is, the finer the detail is. The second histogram has the smallest binwidth, so it displays the data in finer detail. The third histogram has the largest binwidth and clumps much of the data together, hiding lots of detail. The first histogram has a binwidth in between the other two and displays detail correspondingly. Though the second histogram shows the most detail, the binwidth of the first one seems to be just right and is more pleasing to the eye to visualize the data.
+
+```{r view-girls-counts}
+arbuthnot$girls
+```
+
+
+## Exercise 2
+Create a new data frame that includes flights headed to SFO in February, and save this data frame as sfo_feb_flights. How many flights meet these criteria?
+```{r sfo_feb_flights}
+sfo_feb_flights <- nycflights %>%
+  filter(dest == "SFO", month == 2)
+```
+**Flights meet these criteria**
+```{r}
+nrow(sfo_feb_flights)
+```
+
+## Exercise 3
+Describe the distribution of the arrival delays of these flights using a histogram and appropriate summary statistics. Hint: The summary statistics you use should depend on the shape of the distribution.\
+
+```{r plot-sfo_feb_flights}
+ggplot(data = sfo_feb_flights, aes(x = dep_delay)) +
+  geom_histogram(binwidth = 15)
+
+```
+\
+The histogram is right-skewed, so the standard deviation would not accurately represent the distribution of the data.
+```{r}
+sfo_feb_flights %>%
+  group_by(origin) %>%
+  summarise(median_dd = median(dep_delay), 
+            iqr_dd = IQR(dep_delay), 
+            n_flights = n())
+```
+## Exercise 4
+Calculate the median and interquartile range for arr_delays of flights in in the sfo_feb_flights data frame, grouped by carrier. Which carrier has the most variable arrival delays?
+```{r}
+sfo_feb_flights %>%group_by(carrier) %>%
+  summarise(median = median(arr_delay), 
+            iqr = IQR(arr_delay), 
+            n_flights = n()) %>%
+  arrange(desc(iqr))
+```
+Carrier that has the most variable arrival delay
+```{r}
+sfo_feb_flights %>%group_by(carrier) %>%
+  summarise(iqr = IQR(arr_delay)) %>%
+  arrange(desc(iqr))
+
+```
+Departure delays by month
+
+```{r}
+nycflights %>%
+  group_by(month) %>%
+  summarise(mean_dd = mean(dep_delay)) %>%
+  arrange(desc(mean_dd))
+
+```
+
+## Exercise 5
+Suppose you really dislike departure delays and you want to schedule your travel in a month that minimizes your potential departure delay leaving NYC. One option is to choose the month with the lowest mean departure delay. Another option is to choose the month with the lowest median departure delay. What are the pros and cons of these two choices?
+
+The mean is the more reliable measure for deciding which month(s) to avoid flying if you really dislike delayed flights since it gives us the true average. That is even the pros of choosing the mean and the cons is just the measure is sensitive to extreme delays. The cons of choosing the median is that the measure doesn’t arise the true delay.
+```{r}
+nycflights %>%
+  group_by(month) %>%
+  summarise(median = median(dep_delay)) %>%
+  arrange(desc(median))
+
+```
+On time departure rate for NYC airports
+```{r}
+nycflights <- nycflights %>%
+  mutate(dep_type = ifelse(dep_delay < 5, "on time", "delayed"))
+
+nycflights %>%
+  group_by(origin) %>%
+  summarise(ot_dep_rate = sum(dep_type == "on time") / n()) %>%
+  arrange(desc(ot_dep_rate))
+```
+## Exercise 6
+If you were selecting an airport simply based on on time departure percentage, which NYC airport would you choose to fly out of?
+```{r}
+ggplot(data = nycflights, aes(x = origin, fill = dep_type)) +
+  geom_bar()
+```
+LGA has best time departure percentage of (72.8%). Thus correct choice should be LDA airport\
+
+## Exercise 7
+Mutate the data frame so that it includes a new variable that contains the average speed, avg_speed traveled by the plane for each flight (in mph). Hint: Average speed can be calculated as distance divided by number of hours of travel, and note that air_time is given in minutes.
+
+```{r}
+nycflights <- nycflights %>%
+  mutate(avg_speed = distance / (air_time / 60))
+glimpse(nycflights)
+
+```
+
+## Exercise 8
+Make a scatterplot of avg_speed vs. distance. Describe the relationship between average speed and distance. Hint: Use geom_point().
+
+```{r}
+ggplot(data = nycflights, aes(x = distance, y = avg_speed)) + geom_point()
+
+```
+Above graph shows - as distance increases, the average speed increases as well. So average speed and distance maintain a positive relationship.
+
+## Exercise 9
+
+Replicate the following plot. Hint: The data frame plotted only contains flights from American Airlines, Delta Airlines, and United Airlines, and the points are colored by carrier. Once you replicate the plot, determine (roughly) what the cutoff point is for departure delays where you can still expect to get to your destination on time.
+```{r}
+nycflights_3carriers <- nycflights %>%
+  filter(carrier == "AA" | carrier == "DL" | carrier == "UA")
+ggplot(data = nycflights_3carriers, aes(x = dep_delay, y = arr_delay, color= carrier)) + geom_point()
+```
+
