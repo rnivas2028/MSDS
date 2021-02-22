@@ -1,0 +1,221 @@
+---
+title: "Week 3: String Manipulation & Date Processing"
+author: "Ramnivas Singh"
+date: "02/18/2021"
+output:
+  html_document:
+    theme: default
+    df_print: paged
+    pdf_document:
+      extra_dependencies:
+      - geometry
+      - multicol
+      - multirow
+  pdf_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(openintro)
+library(stringr)
+```
+
+## A. Working with Strings
+
+### Regular expressions
+
+```{r}
+fruits <- c('Apple', 'Banana', 'Orange', 'Grape', 'Pineapple', 'Kiwi', 'Peach', 'Mango', 'Strawberry', 'Guava', 'Cherry', 'Apple', 'banana')
+
+fruits =="Banana" #exact match
+```
+
+```{r}
+which(fruits == "Banana") #use which to get position
+```
+
+```{r}
+breakfast = c("Apple", "Banana", "Apple", "banana")
+fruits %in% breakfast 
+```
+
+```{r}
+match(breakfast, fruits) #notice that only the first match is returned
+```
+
+```{r}
+fruits == "bana" #how do we search for pattern?
+```
+
+*grep:* Identifying strings that match a particular criteria
+```{r}
+grep(pattern = 'bana', fruits, value = TRUE, ignore.case = TRUE)
+```
+
+*gsub:* Replacing instances of a string with another of your choosing
+```{r}
+gsub(pattern = "Ch", replacement = "B", fruits[11])
+```
+
+```{r}
+breakfast.ab = c("App", "bana") 
+pmatch(breakfast.ab, fruits) #notice that Apple is not unique so it won't work
+```
+
+```{r}
+grep("nana", fruits) #grep works but one pattern at a time
+```
+
+*gregexpr:* Identifying positions of a string of interest
+```{r}
+(positions_a <- gregexpr(pattern = "a", text = fruits, ignore.case = TRUE))
+```
+positions_a
+### Paste
+
+Use seperators to combine strings with other characters or numbers
+```{r}
+paste("X", 1:5, sep = ".")
+```
+
+Use collapse to combine multiple string outputs together
+```{r}
+paste("X", 1:5, sep = ".", collapse = "")
+```
+
+paste0 is the same as paste with an empty seperator
+```{r}
+paste0("X", 1:5)
+```
+
+NOTE: paste0 does not have a "sep" option that can be modified by the user
+
+paste0("a", "b", sep = "c") == paste0("a", "b", "c")
+
+paste0(rep(c("A","C","G","T"), each=4), c("A","C","G","T"), collapse = "")
+
+### Extra material: Other string manipulations
+
+Changing the case of strings
+```{r}
+string1 <- 'Data Science'
+tolower(string1) 
+toupper(string1)
+```
+
+### Exercise 1: Exercise with Strings
+
+Create this string 'A&1B&2C&3' using a paste function
+```{r}
+resultString<-paste(c("A","B","C"), 1:3, sep = "&", collapse = "")
+resultString
+
+# Detailed answer
+# Example R program to concatenate two strings
+ 
+strA = 'A'
+strB = 'B'
+strC = 'C'
+str1 = '1'
+str2 = '2'
+str3 = '3'
+strN = '&'
+
+resultString1<-paste(strA,strN,str1,strB,strN,str2,strC,strN,str3,sep="")
+resultString1
+print (resultString==resultString1)
+
+
+
+# Lets try something else
+series<-c("Everybody", "Loves", "Raymond", sep="-")
+
+str_length(series)
+str_c(series)
+
+str_view(series, "Ra")
+str_view(series, "y")
+str_view(series, "o")
+str_view(series, "o.")
+
+```
+
+
+
+## B. Working with Dates
+
+```{r}
+dates <- c('11/14/2011', '12/04/2012', '03/01/2013', '02/09/2019')
+class(dates)
+```
+
+```{r}
+real_dates <- as.Date(dates, format = '%m/%d/%Y')
+class(real_dates)
+```
+
+```{r}
+other_format <- format(real_dates, '%A %B %d, %Y')
+class(other_format)
+```
+
+
+For the codes used to identify and format dates:
+```{r}
+#?strptime
+```
+
+Identifying how long ago dates occurred
+```{r}
+today <- Sys.Date()
+
+(dif <- today - real_dates)
+
+class(dif)
+```
+
+To make a difference in times with a particular time unit of interest use difftime
+
+```{r}
+difftime(today, real_dates, units = "hours")
+```
+
+
+### Extra Materials: Lubridate
+
+The lubridate package contains a powerful set of tools that can be used to extract and interact with dates.
+
+There are functions like *mdy* that allow for simpler extration of date information from strings.
+```{r}
+library(lubridate, quietly = TRUE)
+
+(lubri_dates <- mdy(dates))
+```
+
+Extracting specific date information from a date object
+```{r}
+year(lubri_dates)
+
+month(lubri_dates)
+
+day(lubri_dates)
+```
+
+
+### Exercise 2: Exercise with Dates
+
+a. Take the following date (November 11, 2011) and turn it into a date vector in R
+```{r}
+library(lubridate)
+date <- as.Date("November 11, 2011", format = "%B %d, %Y")
+date
+class(date)
+```
+
+b. Display the date vector in the format (month.day.year')
+```{r}
+  format(date, format="%B.%d%.%Y")
+```
