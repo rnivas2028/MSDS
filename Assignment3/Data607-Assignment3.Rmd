@@ -1,0 +1,157 @@
+---
+title: 'Data 607 : Assignment 3 - Character manipulation & Data processing'
+author: "Ramnivas Singh"
+date: "02/21/2021"
+output:   
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: true
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Overview
+
+#1. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/], provide code that identifies the majors that contain either "DATA" or "STATISTICS"\
+
+#2 Write code that transforms the data below:
+
+[1] "bell pepper"  "bilberry"     "blackberry"   "blood orange"
+[5] "blueberry"    "cantaloupe"   "chili pepper" "cloudberry"  
+[9] "elderberry"   "lime"         "lychee"       "mulberry"    
+[13] "olive"        "salal berry"
+Into a format like this:
+
+c("bell pepper", "bilberry", "blackberry", "blood orange", "blueberry", "cantaloupe", "chili pepper", "cloudberry", "elderberry", "lime", "lychee", "mulberry", "olive", "salal berry")
+
+The two exercises below are taken from R for Data Science, 14.3.5.1 in the on-line version:
+\
+#3 Describe, in words, what these expressions will match:
+
+(.)\1\1
+"(.)(.)\\2\\1"
+(..)\1
+"(.).\\1.\\1"
+"(.)(.)(.).*\\3\\2\\1"
+#4 Construct regular expressions to match words that:
+\
+- Start and end with the same character.\
+- Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.)\
+- Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
+
+
+# Preparation Work
+
+## Source dataset
+This step is to source the data set in R program from github location 
+
+```{r}
+library (readr)
+dataUrl="https://raw.githubusercontent.com/rnivas2028/MSDS/Data607/Assignment3/majors-list.csv"
+majorDataSet <- read.csv(dataUrl, header = TRUE, sep = ",", stringsAsFactors = FALSE)
+```
+
+# Excercise 1
+
+Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/], provide code that identifies the majors that contain either "DATA" or "STATISTICS"\
+
+```{r}
+key='DATA|STATISTICS'
+majorSubDataSet <- majorDataSet$Major[grep(key, majorDataSet$Major)]
+print(majorSubDataSet)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+
+# Excercise 2
+
+Write code that transforms the data below:
+
+[1] "bell pepper"  "bilberry"     "blackberry"   "blood orange"
+[5] "blueberry"    "cantaloupe"   "chili pepper" "cloudberry"  
+[9] "elderberry"   "lime"         "lychee"       "mulberry"    
+[13] "olive"        "salal berry"
+Into a format like this:
+
+c("bell pepper", "bilberry", "blackberry", "blood orange", "blueberry", "cantaloupe", "chili pepper", "cloudberry", "elderberry", "lime", "lychee", "mulberry", "olive", "salal berry")
+
+
+```{r}
+dataSet <- data.frame(c("bell pepper", "bilberry", "blackberry","blood orange","blueberry","cantalope","chili pepper","cloudberry","elderberry","lime","lychee","mulberry","olive","salal berry"))
+cat(paste(dataSet), collapse=",")
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Excercise 3
+
+Describe, in words, what these expressions will match:
+
+(.)\1\1
+"(.)(.)\\2\\1"
+(..)\1
+"(.).\\1.\\1"
+"(.)(.)(.).*\\3\\2\\1"
+
+Answers:
+(.)\1\1
+This regular expression is used to match a pattern in a strings with character repeats in it.
+
+“(.)(.)\2\1”
+This regular expression is used to match strings with a set of 4 characters with 2 characters attached to the same 2 characters in reverse order(e.g: otto)
+
+(..)\1
+This regular expression is used to match any strings that have a repeated pair of letters
+
+“(.).\1.\1”
+This regular expression is used to match any strings that has the same character repeat 3 times and they are all separated by one character. (ex: papaya)
+
+"(.)(.)(.).*\3\2\1"
+This regular expression is used to match any strings with 3 characters followed by zero or more characters followed by the original 3 characters in reverse order.. (ex:abccba)
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Excercise 4
+Construct regular expressions to match words that:
+\
+- Start and end with the same character.\
+- Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.)\
+- Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
+
+```{r}
+dataSet <-c("cell","apple","dog","ada","bob","sense","church","banana","pepperoni","red","green","England","eleven","ten","twelve","soso","oso","bandana", "Louisiana", "Missouri", "Mississippi", "Connecticut", "google", "conscience","dalda","short","Evon","ele","Tort")
+#4.1
+expression="^(.)((.*\\1$)|\\1?$)"
+result <- str_subset(dataSet,expression )
+result
+
+#4.2
+expression="([A-Za-z][A-Za-z]).*\\1"
+result <- str_subset(dataSet,expression )
+result
+
+#4.3
+expression="([A-Za-z]).*\\1.*\\1"
+result <- str_subset(dataSet,expression )
+result
+
+```
+
+
+--------------------------------------------------------------------------------
+
+\clearpage
