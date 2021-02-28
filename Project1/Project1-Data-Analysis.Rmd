@@ -281,9 +281,9 @@ names(data_table)[1] <- "Name"
 names(data_table)[2] <- "State"
 names(data_table)[3] <- "Point"
 names(data_table)[4] <- "Pre Rating"
-names(data_table)[5] <- "Average Pre Rating of opp_players"
-datatable(data_table, filter = 'bottom', options = list(pageLength = 10,
-                                                        searching = FALSE,pageLength = TRUE))
+names(data_table)[5] <- "Average Pre Rating of Opponent players"
+datatable(data_table, filter = 'bottom', 
+          options = list(pageLength = 10,searching = TRUE,filter=TRUE, pageLength = TRUE))
 ```
 
 --------------------------------------------------------------------------------
