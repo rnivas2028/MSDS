@@ -1,0 +1,377 @@
+---
+title: 'Project 1 - Data Analysis'
+author: "Ramnivas Singh"
+date: "02/28/2021"
+output:   
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: true
+    toc_depth: 4
+    toc_float:
+      collapsed: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE, message = FALSE, warning = FALSE)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Problem Statement
+In this project, you’re given a text file with chess tournament results where the information has some structure. Your job is to create an R Markdown file that generates a .CSV file (that could for example be imported into a SQL database) with the following information for all of the players:\
+Player’s Name, Player’s State, Total Number of Points, Player’s Pre-Rating, and Average Pre Chess Rating of opp_players\
+For the first player, the information would be:\
+Gary Hua, ON, 6.0, 1794, 1605\
+1605 was calculated by using the pre-tournament opp_players’ ratings of 1436, 1563, 1600, 1610, 1649, 1663, 1716, and dividing by the total number of games played.\
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Acceptance Criteria
+* Source tournament data from remote location (GitHub)\
+* An R Markdown file that generates a .CSV file\
+* This file to be imported into a SQL database\
+* Average Pre Chess Rating of opp_players to be calculated\
+* This file to contain following information for all of the players:\
+   Player’s Name, Player’s State, Total Number of Points, Player’s Pre-Rating, and Average Pre Chess Rating of opp_players\
+* Write .CSV file to remote location\
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Analysis
+* In the first record, Player Number, Player Name, Total Points, and the Round 1 - 7 results can be found.
+* In the second record, Player’s State, USCF ID, Pre-Rating and Post-Rating values can be found. 
+* Remaining other fields not relevant for this project 
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Approach
+* Source tournament data from GitHub
+* Parse tournament data to extract desired data
+* Use regular expressions to extract the data
+* Match players Id with opp_players Id
+* Calculate average Pre Chess Rating of opp_players
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Implementation
+## Source Data Set
+
+```{r}
+# Initial Setup - Load required libraries
+library(tidyverse)
+library(ggplot2)
+library(DT)
+library(dplyr)
+library(htmltools)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+Tournament data is located at remote location in a text file, top 4 lines are not relevant in the file so initil load will ignore these.
+```{r results = TRUE}
+# Load Raw tournament data
+dataURL='https://raw.githubusercontent.com/rnivas2028/MSDS/Data607/Project1/tournamentinfo.txt'
+tournament_results <- read.table(url(dataURL), skip=4, header = FALSE, sep = ",", strip.white=T)
+head(tournament_results)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+Below regular expressions will be used to extract expected data set from tournament data load
+```{r}
+# To extract Pair Number
+reg_ex_pair_num <- "\\d{1,2}(?=\\s\\|)"
+# To extract Player's Name
+reg_ex_player_name <- "\\w+[[:space:]]\\w+([[:space:]]\\w+)*"
+# To extract Player's State
+reg_ex_player_state <- "([[:upper:]]){2}\\s(?=\\|)"
+# To extract Player's Point
+reg_ex_players_point <- "\\d\\.\\d"
+# To extract Player's Rating
+reg_ex_pre_rating <- "(?<!\\>\\s)(?<=\\s{1,2}|\\s\\:)(\\d{3,4}(?=\\s|P))"
+# To extract Player's opp_players
+reg_ex_players_opp_players <- "(\\d{1,}|[[:blank:]]{1})(?=\\|)"
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Data Extraction 
+
+Chess tournament results are in textual format. Information extraction need parsing of row data and extraction or information using regular expressions. 
+Below data points will be extracted from this data set:\
+* Player’s Name\
+* Player’s State\
+* Total Number of Points\
+* Player’s Pre-Rating\
+
+### Extract Player's Name
+This step will extract players name using regular expresssion, there are 64 players
+```{r}
+players <- unlist(str_extract_all(unlist(tournament_results), reg_ex_player_name))
+```
+
+### Extract Player's State
+This step will extract players name using regular expression, there are 64 players
+```{r}
+players_state <- unlist(str_extract_all(unlist(tournament_results), reg_ex_player_state))
+```
+
+Number of players from these states is below
+```{r}
+table(players_state)
+```
+
+### Extract Player's Point
+Player's Point is extracted in textual form and converted to numeric format
+```{r}
+players_point <- unlist(str_extract_all(unlist(tournament_results), reg_ex_players_point))
+as.numeric(players_point)
+```
+### Extract Pair Number
+Pair Number is extracted in textual form and converted to numeric format
+```{r}
+pair_number <- unlist(str_extract_all(unlist(tournament_results), reg_ex_pair_num))
+as.numeric(pair_number)
+```
+
+### Extract Player's Pre Rating
+Players pre rating is extracted in textual form and converted to numeric number
+```{r}
+players_pre_rating <- unlist(str_extract_all(unlist(tournament_results), reg_ex_pre_rating))
+as.numeric(players_pre_rating)
+```
+
+### Extract Player's opp_players
+Player's opp_players are extracted using from given information in the file
+```{r}
+opp_players <- unlist(str_extract_all(unlist(tournament_results), reg_ex_players_opp_players))
+```
+
+### Extract Player's opp_players
+Player's opp_players are extracted using from given information in the file
+
+```{r}
+# Extract and clean opponent players
+opp_player1 <- as.numeric(opp_players[seq(4, length(opp_players), 10)])
+opp_player1 <- as.numeric(opp_player1[seq(1, length(opp_player1), 2)])
+opp_player2 <- as.numeric(opp_players[seq(5, length(opp_players), 10)])
+opp_player2 <- as.numeric(opp_player2[seq(1, length(opp_player2), 2)])
+opp_player3 <- as.numeric(opp_players[seq(6, length(opp_players), 10)])
+opp_player3 <- as.numeric(opp_player3[seq(1, length(opp_player3), 2)])
+opp_player4 <- as.numeric(opp_players[seq(7, length(opp_players), 10)])
+opp_player4 <- as.numeric(opp_player4[seq(1, length(opp_player4), 2)])
+opp_player5 <- as.numeric(opp_players[seq(8, length(opp_players), 10)])
+opp_player5 <- as.numeric(opp_player5[seq(1, length(opp_player5), 2)])
+opp_player6 <- as.numeric(opp_players[seq(9, length(opp_players), 10)])
+opp_player6 <- as.numeric(opp_player6[seq(1, length(opp_player6), 2)])
+opp_player7 <- as.numeric(opp_players[seq(10, length(opp_players), 10)])
+opp_player7 <- as.numeric(opp_player7[seq(1, length(opp_player7), 2)])
+# Create a matrix with opp_player information 
+opp_players <- matrix(c(opp_player1, opp_player2, opp_player3, 
+                    opp_player4, opp_player5, opp_player6, opp_player7),
+                    nrow = 64, ncol = 7)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Match opp_players to player
+Player's opp_players are matched using players id to extract opp_players in the collection below
+
+## Find average Pre Chess Rating of opp_players
+Average Pre Chess Rating of opp_players is calculated by taking mean of opp_players Pre Chess Rating 
+```{r}
+avg_pre_chess_rating <- 0
+for (i in 1:(length(pair_number)))
+{
+  avg_pre_chess_rating[i] <- mean(as.numeric(players_pre_rating[opp_players[i,]]), na.rm = T)
+}
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Create result data frame
+Lets create a data frame with - Player’s Name, Player’s State, Total Number of Points, Player’s Pre-Rating, and Average Pre Chess Rating of opp_players
+```{r}
+tournament_data_result <- 0
+tournament_data_result <- data.frame(players, players_state, players_point, players_pre_rating, avg_pre_chess_rating)
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Exploratory Data Analysis
+Lets visualize tournament data results
+
+Plot average pre chess rating with players points
+```{r}
+ggplot(data = tournament_data_result, 
+       aes(x = avg_pre_chess_rating, y = players_point, color=players_state,  
+           shape=players_state)) + 
+  geom_point()+xlab("Average pre rating")+ylab("Player's point")+
+  ggtitle("Player's Points and opp_player's average pre rating")
+```
+
+* Most of the opp_players are with their points between 3 and 3.5\
+* There are opp_players with less than 3 and more than 3.5 as well\
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+Plot Player count by state
+```{r}
+ggplot(data = tournament_data_result) +
+geom_bar(mapping = aes(x = players_point, fill = players_state))+
+  xlab("Player's Point")+ylab("Player Count")+
+  ggtitle("Player count by state")
+
+```
+
+* State MI has most of the players in this tournament\
+* ON is second with players count more than OH\
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+Plot opp_players Average pre rating with Player's point
+```{r}
+ggplot(data = tournament_data_result, aes(x = players_point, y = avg_pre_chess_rating)) + 
+  geom_boxplot()+ylab("Average pre rating")+xlab("Player's point")
+
+```
+
+* Players with chess point between 3 and 3.5 has opp_players positive skewed (average pre chess rating)\
+* By looking at purified data set, conclusion is that the average ratings are not near to full-point accuracy
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+### Display result in a table
+Create data table with search and navigation capabilities
+```{r}
+data_table<- data.frame(players, players_state, players_point, players_pre_rating, 
+                        round(avg_pre_chess_rating,2))
+names(data_table)[0] <- "Player Id"
+names(data_table)[1] <- "Name"
+names(data_table)[2] <- "State"
+names(data_table)[3] <- "Point"
+names(data_table)[4] <- "Pre Rating"
+names(data_table)[5] <- "Average Pre Rating of opp_players"
+datatable(data_table, filter = 'bottom', options = list(pageLength = 10,
+                                                        searching = FALSE,pageLength = TRUE))
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Write result set to a file
+This step will write result data to a .CSV file
+```{r}
+write.csv(tournament_data_result, file = "tournament_data_result.csv")
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Additional implementation
+
+These instructions can be used to import .CSV file into MySQL database\
+
+## Create database
+```
+DROP DATABASE IF EXISTS movie_ratings;
+CREATE DATABASE `tournament_data_results`
+USE tournament_data_results;
+```
+
+## Create a table
+```
+DROP TABLE IF EXISTS tournament_result;
+CREATE TABLE `tournament_result` (
+  `player_id` int NOT NULL,
+  `player_name` varchar(100) DEFAULT NULL,
+  `players_state` varchar(10) DEFAULT NULL,
+  `players_point` float(10,2) DEFAULT NULL,
+  `players_pre_rating` float(10,2) DEFAULT NULL,
+  `avg_pre_chess_rating` float(10,2) DEFAULT NULL,
+  `addedOn` datetime DEFAULT NULL,
+  `addedBy` varchar(100) DEFAULT NULL,
+  `updatedOn` datetime DEFAULT NULL,
+  `updatedBy` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`player_id`)
+);
+```
+## Importing data
+```
+LOAD DATA INFILE '<<File Location>>\\tournament_data_results.csv' 
+INTO TABLE tournament_result 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+```
+
+## Using AWS S3
+
+* Using AWS S3 to export .CSV file for future use cases is recommended capability\
+* AWS S3 is industry standard to retain data files to access from anywhere on internet\
+```{r eval = FALSE, results = TRUE}
+library (readr)
+library(aws.s3)
+bucketlist(key = <AWS Key>, secret = <AWS Key>)
+# Upload files to S3 bucket
+put_object(
+  file = file.path(tempdir(), "tournament_data_result.csv"), 
+  object = "tournament_data_result.csv", 
+  bucket = "msds-data607"
+)
+# Get buckets and contents
+get_bucket(bucket = "msds-data607")
+
+# Display contents
+s3read_using(FUN = read.csv, bucket = "msds-data607", object = "tournament_data_result.csv")
+s3read_using(FUN = read.csv, object = "s3://msds-data607/tournament_data_result.csv")
+s3read_using(FUN = data.table::tournament_data_result, 
+             object = "s3://msds-data607/tournament_data_result.csv") 
+```
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Conclusion
+* Regular expressions are extremely useful to extract desired data set from textual contents
+* Data can be cleansed and used for further analysis such as calculating average pre ratings of opp_players
+* Refined data set can be used to render for visual display or save in a file process further in relational database
+* Output data file can also be saved to AWS S3 bucket. An additional library (aws.s3) needed in R to get this working
+
+--------------------------------------------------------------------------------
+
+\clearpage
