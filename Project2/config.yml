@@ -1,0 +1,11 @@
+default:
+  aws.rds:
+    user: 'admin'
+    creds: '!passKey607'
+    host: 'data607-project2.cbs1lxtno2zh.us-east-2.rds.amazonaws.com'
+    schema: 'd_607_p2_all'
+  twitter.auth:
+    consumer_key: 'bykeFwc7xIrPwzdaWDorfOOZm'
+    consumer_secret: 'ch6eVlew0GI3J2G7KBjZMXYncQ2zSR7RoMnPHFwPoSA52czuvT'
+    access_token: '925517984151556096-vUSWzCQasSYQS8mMbjA3FbU1ymJfEN2'
+    access_secret: 'm94uZ3fI5ILqqpYv7376Vy7DinVN0eJNRK4cVkI0lHkTq'
