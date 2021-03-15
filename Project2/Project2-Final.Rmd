@@ -1,0 +1,831 @@
+---
+title: "Project 2 : Data Transformation"
+author: "Ramnivas Singh | Deepak Sharma | Tage Singh" 
+date: "`r Sys.Date()`" 
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: yes
+    toc_depth: 5
+    toc_float:
+      collapsed: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE, message = FALSE, warning = FALSE)
+```
+
+
+# Objective
+The goal of this project is to prepare different datasets for downstream analysis work.We have to choose three of the “wide” datasets identified in the Week 5, transform the data, perform analysis, and have a conclusion.
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Acceptance Criteria
+(1) For each of the three chosen datasets: \
+* Create a .CSV file that includes all of the information included in the dataset. Use a “wide” structure similar to how the information appears in the discussion item to practice tidying and transformations as described below. \
+* Read the information from .CSV file into R, and use tidyr and dplyr as needed to tidy and transform data. \
+* Perform the analysis requested in the discussion item. \
+* Code should be in an R Markdown file, posted to rpubs.com, and should include narrative descriptions of data cleanup work, analysis, and conclusions. \
+(2) Include homework submission, for each of the three chosen datasets: \
+* The URL to the .Rmd file in GitHub repository, and \
+* The URL for rpubs.com web page. \
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+Three data sets are picked for this project.\
+
+* Data set 1 : World population \
+* Data set 2 : Financial Ticker analysis in relation to Twitter sentiments \
+* Data set 3 : CoViD-19 Pandemic Data Analysis \
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Data set 1 : World population \
+We will analyze human population growth models and how they tie into theoretical frameworks such as demographic transition theory and carrying capacity. Populations grow model is then fitted to data spanning a period between 10000 BC up to 2021 to prove model is correct and projections are generated based on historical data \
+
+## Modeling Population Growth \
+Two models to describe how populations grow over time: \
+Logistic or Verhulst growth model - Growth of most populations depends at least in part on the available resources in their environments. 
+
+$$
+dN/dt = rN (1 – N/K)
+$$
+*The change (d) in number of individuals (N) over a change (d) in time (t) equals the rate of increase (r) in number of individuals where population size (N) is a proportion of the carrying capacity (K).*
+
+Exponential or Malthus growth model - Population increase over time is a result of the number of individuals available to reproduce without regard to resource limits.The exponential growth model equation looks like this: \
+
+$$
+dN/dt = rN
+$$
+*The change (d) in number of individuals (N) over a change (d) in time (t) equals the rate of increase (r) in number of individuals (N).*
+
+Following analysis will be performed on the data set
+
+Analysis 1: Transform data to fit into Logistic growth model \
+Analysis 2: Predict population based on available Coefficients \
+Analysis 3: World population growth plot \
+Analysis 4: Top 10 countries with highest population growth \
+Analysis 5: Top 10 countries with highest population trend \
+Analysis 6: Top 10 countries with negative growth \
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+
+## Data Source
+* World population data is sourced from [World Population View](https://worldpopulationreview.com/). Data is avaiable as HTML table and CSV data set. We have picked top 10 populations for our analysis.Additionally we have picked Australia to plot actual and predicted population. Data to compare with census and predicted model is available at government website. 
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Libraries & Capabilities used 
+```
+Libraries 
+* dplyr
+* tidyr
+* ggplot
+* aws.s3
+* RMySQL
+* lares
+
+Capabilities 
+* AWS RDS MySQL
+* AWS S3
+* RPubs.com
+* Gitbub
+```
+
+```{r results = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library (readr)
+library(RMySQL)
+library(DT)
+library(lares)
+library(httr)
+library(stringr)
+library(twitteR)
+library(magrittr)
+library(SentimentAnalysis)
+require(gridExtra)
+library(streamR)
+library(data.table)
+library(aws.s3)
+library(rlist)
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+
+## Create data tables and import data
+```
+-- load-world-population.sql
+DROP DATABASE IF EXISTS d_607_p2_all;
+CREATE DATABASE `d_607_p2_all` 
+USE d_607_p2_all;
+
+DROP TABLE IF EXISTS rs_countries;
+CREATE TABLE `rs_countries` (
+  `country_cd` text,
+  `country_name` text
+);
+
+CREATE TABLE `rs_country_population` (
+  `country_cd` text,
+  `year` int DEFAULT NULL,
+  `total_population` int DEFAULT NULL,
+  `growth_rate` double DEFAULT NULL,
+  `density` double DEFAULT NULL,
+  `total_population_rank` int DEFAULT NULL,
+  `density_rank` int DEFAULT NULL
+) ;
+
+CREATE TABLE `rs_world_population` (
+  `country_cd` text,
+  `pop2021` int DEFAULT NULL,
+  `pop2020` int DEFAULT NULL,
+  `pop2050` int DEFAULT NULL,
+  `pop2030` int DEFAULT NULL,
+  `pop2019` int DEFAULT NULL,
+  `pop2015` int DEFAULT NULL,
+  `pop2010` int DEFAULT NULL,
+  `pop2000` int DEFAULT NULL,
+  `pop1990` int DEFAULT NULL,
+  `pop1980` int DEFAULT NULL,
+  `pop1970` int DEFAULT NULL,
+  `area` int DEFAULT NULL,
+  `density` double DEFAULT NULL,
+  `growth_rate` double DEFAULT NULL,
+  `world_percentage` double DEFAULT NULL,
+  `rank` int DEFAULT NULL
+) ;
+
+CREATE TABLE `rs_world_population_trend` (
+  `year` int DEFAULT NULL,
+  `value` int DEFAULT NULL,
+  `growth_rate` double DEFAULT NULL
+);
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+Using AWS S3 to save .CSV and .SQL files to initialize the database \
+```{r}
+# get_bucket(bucket = "msds-data607")
+```
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Load data from .CVS into RDS
+
+```
+LOAD DATA INFILE 'rs_countries.csv' 
+INTO TABLE rs_countries 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA INFILE 'rs_country_population.csv' 
+INTO TABLE rs_country_population 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA INFILE 'rs_world_population.csv' 
+INTO TABLE rs_world_population 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+LOAD DATA INFILE 'rs_world_population_trend.csv' 
+INTO TABLE rs_world_population_trend 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Load RDS credentials from secret management
+```{r}
+user <-get_creds()$`aws.rds`$user
+password <-get_creds()$`aws.rds`$creds
+host<-get_creds()$`aws.rds`$host
+dbname<-get_creds()$`aws.rds`$schema
+```
+
+## Initialize RDS Database connection
+```{r}
+connection = dbConnect(MySQL(), user = user, password = password, dbname = dbname, host = host)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Get data function
+This common function is created by using dplyr to load data from a given table
+```{r}
+get_data<- function(table_name) {
+dataset <- tbl(connection,dbplyr::in_schema(dbname, table_name))
+  return(dataset)
+}
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+
+## Getting the data
+```{r}
+# Using dplyr to source data into R
+# Get country data
+countries_data<-as.data.frame(get_data('rs_countries'))
+# Get world population and projections
+world_pop_data<-as.data.frame(get_data('rs_world_population'))
+# Get country data and projections
+countries_pop_data<-as.data.frame(get_data('rs_country_population'))
+# Get world population and projections
+world_pop_trend_data<-as.data.frame(get_data('rs_world_population_trend'))
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Data clean up
+
+```{r}
+
+colnames(world_pop_data)[colnames(world_pop_data) %in% c('pop2021','pop2020','pop2050','pop2030','pop2019','pop2015','pop2010','pop2000','pop1990','pop1980','pop1970')] <- c('2021','2020','2050','2030','2019','2015','2010','2000','1990','1980','1970')
+```
+
+## Tidy & Data Transformation
+```{r}
+# This population is for each country by year lets plot it
+head(world_pop_data)
+world_pop_data<-(world_pop_data %>%
+gather('2021','2020','2050','2030','2019','2015','2010','2000','1990','1980','1970', key = "year", value = "growth"))
+
+world_pop_data<-world_pop_data<-world_pop_data%>% 
+  filter(year >2000)
+world_pop_data<-(world_pop_data %>% group_by(country_cd,year) %>%
+   summarize(growth=sum(growth)))
+head(world_pop_data)
+
+# Join with Country table for country name
+countries_pop_data <-(left_join(countries_pop_data,countries_data,by = "country_cd"))
+world_pop_data <-(left_join(world_pop_data,countries_data,by = "country_cd"))
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Analysis 1: Transform data to fit into Logistic growth model
+
+Logistic growth model is applied on wide data set available on Australian Government site. This model is implemented using nls [Nonlinear Least Squares](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/nls)
+
+```{r}
+au_pop_data<-countries_pop_data%>% 
+  filter(country_cd =='AU')
+
+population <- data.frame(years <- c(au_pop_data$year), growth <- c(au_pop_data$total_population))
+pop_ss <- nls(growth ~ SSlogis(years, phi1, phi2, phi3), data = population)
+summary(pop_ss)
+alpha <- coef(pop_ss)  # Coefficients
+# This is Census data plot
+plot(growth ~ years, data = population, main = "Logistic Growth Model", 
+    xlab = "Year", ylab = "Population", xlim = c(1780, 2021), ylim = c(0, 4e+07))
+# This is fitted model
+curve(alpha[1]/(1 + exp(-(x - alpha[2])/alpha[3])), add = T, col = "red")  # Fitted model
+points(2021, 25700724, pch = "x", cex = 1.3)
+points(2100, 29716706, pch = "x", cex = 1.3)
+```
+
+**Findings:** \
+
+* Results of Logistic growth model are close to actual data from census. So model appears to be accurate \
+* Census data from Australian government website is close to the data generated by Logistic growth model \
+* In black is data from census, in red is data plot based on fitted model \
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Analysis 2: Predict population based on available coefficients
+```{r}
+predict_years<-c(1800, 1850, 1900, 1950, 2000, 2050, 2100, 2150, 2200)
+predict_pop_ss <- predict(pop_ss, data.frame(years = c(predict_years)))
+predictions <- data.frame(predict_years,predict_pop_ss)
+names(predictions)[1] <- "Year"
+names(predictions)[2] <- "Population"
+datatable(predictions, filter = 'bottom', 
+          options = list(pageLength = 10,searching = TRUE,filter=TRUE, 
+                         pageLength = TRUE))
+
+ggplot(data=predictions, aes(x=predict_years, y =predict_pop_ss, fill= predict_years))+
+    geom_bar(stat="identity")+labs(x = "Year", y="Population")+
+    theme(axis.text.x = element_blank(),plot.title = element_text(hjust=1),
+          legend.position = "right")+geom_vline(xintercept = 2021, linetype="dotted", 
+                color = "blue", size=.5)
+
+```
+
+**Findings:** \
+
+* Projections generated based on the coefficients shows a variance \
+* Variance increases as population is predicted far in the future for Australia \
+* Population in year 2100 is expected to be 42 million  whereas model shows 41.6 million \
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Analysis 3: World population growth plot
+
+```{r}
+
+ggplot(world_pop_trend_data, aes(x=year, y=value, fill= year)) +
+ geom_line() +geom_vline(xintercept = 2021, linetype="dotted", 
+                color = "blue", size=.5)+labs(x = "Year", y="Population")
+
+```
+
+**Findings:** \
+
+* Plot show exponential growth in population in past few hundred years \
+* This plot shows closeness with exponential growth model
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+
+## Analysis 4: Top 10 countries with highest population growth
+```{r}
+countries_pop_data$total_population<-countries_pop_data$total_population/10000
+ggplot(countries_pop_data %>%
+  filter(density > 0 & year==2021), aes(y=country_name, x =total_population, fill= country_name))+labs(y = "Country", x="Population")+
+    geom_bar(stat="identity")
+```
+
+
+**Findings:** \
+
+* China, India, USA, Indonesia, Bangladesh, New Zealand, Pakistan, Russia, Mexico and Brazil are top 10 countries based on current population   \
+* Russia shows spikes due to separation of united countries
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+
+## Analysis 5:  Top 10 countries with highest population trend
+
+```{r}
+ggplot(countries_pop_data %>% 
+  filter(density > 0), aes(x = year, y = total_population, group = country_name)) +
+  geom_line(aes(color = country_name), size = .65) +geom_vline(xintercept = 2021, linetype="dotted", 
+                color = "blue", size=.5)+labs(x = "Year", y="Population")
+```
+
+Plot prior to blue vertical line is actual historical data. Projections are plotted after blue line \
+
+**Findings:** \
+
+* China and India are on top in the list  \
+* China, India, New Zealand shows increased population trend \
+* New Zealand shows increased population trend in a projected population till year 2100 \
+
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+
+## Analysis 6: Top 10 countries with negative growth
+
+```{r}
+world_negative_growthrate<-world_pop_data%>% 
+  filter( year==2020)
+selectdata_negative<-world_negative_growthrate %>%select(country_name,growth)%>%
+                     group_by(country_name)%>%
+                     arrange(growth)%>%
+                     top_n(10) 
+selectdata_negative<-selectdata_negative[1:10,]
+ggplot(data=selectdata_negative)+
+  geom_bar(mapping = aes(y = country_name, x = growth,
+                         fill = country_name), stat = "identity") +
+  xlab('Growth') +
+  ylab('Country')+
+  labs(y = "", x = " Top 10 countries with negative growth")
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Conclusions
+* Population growth model shows data fit and predictions are generated. This is  \n
+
+$$
+dN/dt = rN (1 – N/K)
+$$
+
+* Predictions are close to predictions shared by public sites \
+* China, India and and are on top in the list of population growth \
+* Predictions for world population show negative growth for few countries around year 2050 and after 
+
+--------------------------------------------------------------------------------\
+
+\clearpage
+
+# Data set 2 : Financial Ticker analysis in relation to Twitter sentiments \
+We sometime see crazy rush in price of any stock.This could be in general due  to
+overall market positiveness,any specific event or due some special comments. Here
+we are trying to gauge and see if any specic remarks made on tweeter cause the
+stock price volatility.Example here in picture of Amazon Stock and tweets from
+Jeff Bezos. Here we had to create application on twitter ,get authentication
+and setup token on our machine before we can receive any tweet searches back
+through tweet API for which we have use tweetr R package.
+
+Model used to get the sentiment analysis of the tweet \
+We can only understand the importance of the tweet if somehow we are able to put
+some weight to it. So the sentimental R pacakage classifies the text from the
+tweet and provides the sentiment value based on its nature.
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+Data Analysis \
+1. Extracted tweet data and used sentiment analysis on it
+2. Got the history of amazon stock price from yahoo and for the dates of the
+   tweet and the stock(closing price) in question compared the stock movement.
+   
+--------------------------------------------------------------------------------
+
+\clearpage
+### Get Twitter Authorization  
+```{r}
+consumer_key<-get_creds()$`twitter.auth`$consumer_key
+consumer_secret<-get_creds()$`twitter.auth`$consumer_secret
+access_token<-get_creds()$`twitter.auth`$access_token
+access_secret<-get_creds()$`twitter.auth`$access_secret
+setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
+```
+--------------------------------------------------------------------------------
+
+\clearpage
+
+### Getting the data
+```{r}
+# Using dplyr to source data into R
+# Get amazon ticker data stored in AWS RDS table.
+amzon_data<-as.data.frame(get_data('ds_amzn'))
+
+numberOfTweets <- 936
+#Scrape tweets containing "#jeffBezos" and "@jeffBezos"
+tweets <- searchTwitter(searchString="#jeffbezos", n = numberOfTweets, lang="en")
+tweets <- searchTwitter(searchString="#jeffbezos", n = numberOfTweets, lang="en")
+tweets2 <- searchTwitter(searchString="@jeffBezos", n = numberOfTweets, lang="en")
+tweetsDF <- twListToDF(tweets)
+tweetsDF2 <- twListToDF(tweets2)
+tweetsFullDF <- rbind(tweetsDF, tweetsDF2)
+
+#Convert to dataframe and encode to native
+x <- tweetsFullDF
+x$text <- enc2native(x$text)
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+### Data clean up
+
+```{r}
+x$text <- gsub("^[[:space:]]*","",x$text) # Remove leading whitespaces
+x$text <- gsub("[[:space:]]*$","",x$text) # Remove trailing whitespaces
+x$text <- gsub(" +"," ",x$text) #Remove extra whitespaces
+x$text <- gsub("'", "%%", x$text) #Replace apostrophes with %%
+x$text <- iconv(x$text, "latin1", "ASCII", sub="") # Remove emojis
+x$text <- gsub("<(.*)>", "", x$text) #Remove Unicodes like <U+A>
+x$text <- gsub("\\ \\. ", " ", x$text) #Replace orphaned fullstops with space
+x$text <- gsub("  ", " ", x$text) #Replace double space with single space
+x$text <- gsub("%%", "\'", x$text) #Change %% back to apostrophes
+x$text <- gsub("https(.*)*$", "", x$text) #Remove tweet URL
+x$text <- gsub("\\n", "-", x$text) #Replace line breaks with "-"
+x$text <- gsub("--", "-", x$text) #Remove double "-" from double line breaks
+x$text <- gsub("&amp;", "&", x$text) #Fix ampersand &
+x$text[x$text == " "] <- "<no text>"
+
+for (i in 1:nrow(x)) {
+    if (x$truncated[i] == TRUE) {
+        x$text[i] <- gsub("[[:space:]]*$","...",x$text[i])
+    }
+}
+
+#Select desired column
+cleanTweets <- x %>% 
+               select("text")
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Tidying & Transformation
+```{r}
+#Analyze sentiment
+sentiment <- analyzeSentiment(cleanTweets)
+#Extract dictionary-based sentiment according to the QDAP dictionary
+sentiment2 <- sentiment$SentimentQDAP
+#View sentiment direction (i.e. positive, neutral and negative)
+sentiment3 <- convertToDirection(sentiment$SentimentQDAP)
+
+#Extract and convert 'date' column
+date <- x$created
+date <- str_extract(date, "\\d{4}-\\d{2}-\\d{2}")
+date <- as.Date(date)
+date <- as.Date(date, format = "%m/%d/%y")
+
+#Create new dataframe with desired columns
+df <- cbind(cleanTweets, sentiment2, sentiment3, date)
+#Remove rows with NA
+df <- df[complete.cases(df), ]
+
+#Calculate the average of daily sentiment score
+df2 <- df %>% 
+       group_by(date) %>%
+       summarize(meanSentiment = mean(sentiment2, na.rm=TRUE))
+
+DT::datatable(df2, editable = TRUE)
+
+#Get frquency of each sentiment i.e. positive, neutral, and negative  
+freq <- df %>% 
+        group_by(date,sentiment3) %>% 
+        summarise(Freq=n())
+
+#Convert data from long to wide
+freq2 <- freq %>% 
+         spread(key = sentiment3, value = Freq)
+
+DT::datatable(freq2, editable = TRUE)
+
+ggplot() + 
+  geom_bar(mapping = aes(x = freq$date, y = freq$Freq, fill = freq$sentiment3), stat = "identity") +
+  ylab('Sentiment Frequency') +
+  xlab('Date')
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Data analysis
+```{r}
+#Calculate z-Scores of Amazon closing stock prices
+mu <- mean(amzon_data$Adj_Close)
+sd <- sd(amzon_data$Adj_Close)
+amzn2 <- amzon_data %>% 
+         mutate(zScore = (amzon_data$Adj_Close-mu)/sd)
+
+#Plot mean sentiment scores
+p1 <- ggplot(data=df2, aes(x=date,y=meanSentiment, group=1)) +
+  geom_line()+
+  geom_point() +
+  ylab("Mean Twitter Sentiment Score")
+
+#plot Amazon Nasdaq z-score prices
+p2 <- ggplot(data=amzn2, aes(x=Date,y=zScore, group=1)) +
+  geom_line()+
+  geom_point() +
+  ylab("Z-Score of closing stock price")
+  scale_x_date(date_breaks = "1 day", 
+   limits = as.Date(c('2021-03-01','2021-03-10')))
+                 
+plot1 <- p1
+plot2 <- p2
+grid.arrange(plot1, plot2, nrow=2)
+
+#Plot both data on same plot and see how the trend is with relation to tweet
+plot(df2$date,df2$meanSentiment, type="l", col="red3",  xlab='Date', ylab='Mean Sentiment Score')
+par(new=TRUE)
+plot(as.Date(amzn2$Date,format = "%m/%d/%y"),amzn2$zScore, type="l", axes=F, xlab=NA, ylab=NA, col="blue")
+legend("topright",
+       legend=c("Mean Sentiment Score"),
+       lty=c(1,0), col=c("red3"))
+
+```
+
+## Conclusions
+From the chart output we can conclude that we are not able to clearly say that
+there is any co-relation. There are days when they are so many tweets but still
+the prices are down and then on other days the tweets are low but the stock
+prices are up. We were also limited in more data analysis due to the fact that
+there is restriction in how many tweets we are allowed to pull from twitter.
+Maximum tweets we could fetch are 936 which hindered our capability for the
+complete analysis.
+
+
+--------------------------------------------------------------------------------\
+\clearpage
+
+# Data set 3 : CoViD-19 Pandemic \
+
+The COVID-19 pandemic is now the most devastating public health disaster in modern history. Our discussion here will provide a brief quantitative view of one of the numerous datasets currently available in the public domain. As data scientists, we will have ample opportunity to study this public health crises and it's collateral effects from both  public health and financial perspectives. The analytical work is just now beginning and this work is a brief look into what will surely become a major area of focus for many analytical disciplines. We will attempt to answer the following questions with this work.
+
+Data Analysis \
+Our work includes sourcing the data used from the public domain, wrangling and presenting TIDY data that gives us a picture of the pandemic. We will examine one dataset containing COVID-19 data to answer the following questions
+
+Analysis 1: COVID-19 cases by month for 2020 \
+Analysis 2: COVID-19 Total Deaths by month for 2020 \
+Analysis 3: COVID-19 Total Cases Per Million Population by month for 2020 \
+Analysis 4: COVID-19 Total Deaths Per Million Population by month for 2020 \
+Analysis 5: confirmed Covid 19 cases required hospitalization in Israel in 2020 for 2 months
+
+## Data Source
+
+We sourced data from [Kaggle](https://www.kaggle.com/)
+
+The dataset we used is part of large (> 2.50 GB) dataset currently containing in excess of 230 .csv files
+
+We consolidated all datasets used for this project in a single schema hosted on Amazon Remote Database Services
+This allowed us to efficiently access needed information for our analysis
+
+```{r}
+dbname <-'d_607_p2_all'
+connection = dbConnect(MySQL(), user = user, password = password, dbname = dbname, host = host)
+### Getting the data
+# Using dplyr to source data into R
+# Get country data
+countries_data<-as.data.frame(get_data('rs_countries'))
+# Get country data and projections
+countries_pop_data<-as.data.frame(get_data('rs_country_population'))
+
+```
+
+## Getting the data
+```{r}
+# Using dplyr to source data into R
+# Get country data
+tns_covid_1_data<-as.data.frame(get_data('tns_covid_2'))
+
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Data clean up
+
+To add a level of continuum to our project, the dataset used for the COVID-19 analysis contain data pertaining to 212 countries/Territories, we choose to analyze the same countries in Dataset 1
+
+
+```{r}
+
+head(tns_covid_1_data)
+# Joining countries_pop_subdata with countries_data to get country name
+countries_pop_subdata<-(countries_pop_data %>%
+  filter(density > 0))
+countries_pop_subdata <-(left_join(countries_pop_subdata,countries_data,by = "country_cd"))
+head(countries_pop_subdata)
+## Tidying and Data Transformation
+countries_covid_subdata<-tns_covid_1_data %>%
+filter(location %in% countries_pop_subdata$country_name)
+head(countries_covid_subdata)
+ ## The countries included in our analysis dataset are as follows 
+unique_contries<-unique(countries_covid_subdata$location)
+unique_contries
+```
+
+## Data analysis
+
+## Analysis 1 - Examining COVID-19 cases by month for 2020
+
+As is shown, The United States with the largest number of cases started to peak in the 4th qtr of 2020 followed by India in the 3rd Qtr - Using this dataset
+
+```{r}
+
+ggplot(countries_covid_subdata, 
+  aes(x = month_no, y = cases, group = location)) +
+  geom_line(aes(color = location), size = .65) + 
+               labs(x = "Month", y="Cases")
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Analysis 2 - Examining COVID-19 Total Deaths by month for 2020
+As is shown Total Deaths starts to peak in October for the entire population of countries
+
+```{r}
+ggplot(countries_covid_subdata, 
+  aes(x = month_no, y = total_deaths, group = location)) +
+  geom_line(aes(color = location), size = .65) + 
+               labs(x = "Month", y="Total Deaths")+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Analysis 3 - Examining COVID-19 Total Cases Per Million Population by month for 2020
+As is expected this measurement also peaks in the 4th qtr for the population
+
+```{r}
+ggplot(countries_covid_subdata, 
+  aes(x = month_no, y = total_cases_per_million, group = location)) +
+  geom_line(aes(color = location), size = .65) + 
+               labs(x = "Month", y="Total Cases Per Million")
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Analysis 4 - Examining COVID-19 Total Deaths Per Million Population by month for 2020
+As is expected this measurement also peaks in the 4th qtr for the population 
+
+```{r}
+ggplot(countries_covid_subdata, 
+  aes(x = month_no, y = total_deaths_per_million, group = location)) +
+  geom_line(aes(color = location), size = 1.0) + 
+               labs(x = "Month", y="Total Deaths Per Million")
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Analysis 6 How many confirmed Covid 19 cases required hospitalization in Israel in 2020 for 2 months 
+
+```{r}
+ #How many confirmed Covid 19 cases required hospitalization in Israel in 2020 for 2 months 
+tns_covid_1_data<-as.data.frame(get_data('tns_covid_1'))
+tns_covid_1_data_inIsrael_in2021 <- tns_covid_1_data %>%
+  filter(date >'2020-04-01' & date < '2020-06-01' & continent=="Asia" & location == "Israel")
+ggplot(tns_covid_1_data_inIsrael_in2021, aes(x=total_cases, y=hosp_patients, col=date)) +geom_point() +geom_abline(intercept=0, slope=1/10)+theme(legend.position="none")+
+   labs(y = "", x = " Covid Cases vs Hospitilazation pattern in Israel for 2 months")
+
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Conclusion 
+Initially the cases were on rise but then this dropped --may be due. The government action to implement lockdown or people wearing masks etc.The data we examined is not a complete set for the COVID-19 pandemic, but we know that the pandemic was at it's worst in the 4th qtr of 2020 and Indian and Brazil had the largest ration of infected people die.
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Citations & References
+
+* [World population review](https://worldpopulationreview.com/) \
+* [Nonlinear Least Squares](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/nls/) \
+* [Population Growth Models](https://eng.libretexts.org/Bookshelves/Environmental_Engineering_(Sustainability_and_Conservation)/Book%3A_Introduction_to_Environmental_Science_(Zendher_et_al.)/2%3A_Population_Ecology/2.2%3A_Population_Growth_Models) \
+* [Population Projections, Australia](https://www.abs.gov.au/statistics/people/population/population-projections-australia) \
+* [World Population in 2100](https://www.theguardian.com/world/2020/jul/15/world-population-in-2100-could-be-2-billion-below-un-forecasts-study-suggests) \
+* [Kaggle](https://www.kaggle.com/)
