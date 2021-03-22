@@ -1,0 +1,26 @@
+{"Books" :[
+	{
+	"Title" : "Machine Learning with R",
+	"Author" : ["Brett Lantz"],
+	"Publisher" : "Packt",
+	"Year" : 2019,
+	"Edition" : "3rd",
+	"ISBN" : "978-1-788-29586-4"
+	},
+	{
+	"Title" : "Data Science for Business",
+	"Author" : ["Foster Provost", "Tom Fawcett"],
+	"Publisher" : "OReilly Media, Inc",
+	"Year" : 2013,
+	"Edition" : "1st",
+	"ISBN" : "978-1-449-36132-7"
+	},
+	{
+	"Title" : "Modern Data Science with R",
+	"Author" : ["Benjamin S. Baumer", "Daniel T. Kaplan", "Nicholas J. Horton"],
+	"Publisher" : "CRC Press",
+	"Year" : 2022,
+	"Edition" : "1st",
+	"ISBN" : "978-1-498-72448-7"
+	}]
+}

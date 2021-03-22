@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<books>
+	<book id = "1">
+    	<Title>Machine Learning with R</Title>
+		<Authors>
+			<Author>Brett Lantz</Author>
+        </Authors>
+        <Publisher>Packt</Publisher>
+        <Year>2019</Year>
+        <Edition>3rd</Edition>
+        <ISBN>978-1-788-29586-4</ISBN>
+	</book>
+    	<book id = "2">
+    	<Title>Data Science for Business</Title>
+		<Authors>
+			<Author>Foster Provost, </Author>
+			<Author>Tom Fawcett</Author>
+        </Authors>
+		<Publisher>O’Reilly Media, Inc</Publisher>
+        <Year>2013</Year>
+        <Edition>1st</Edition>
+        <ISBN>978-1-449-36132-7</ISBN>
+	</book>
+	<book id = "3">
+    	<Title>Modern Data Science with R</Title>
+        <Authors>
+			<Author>Benjamin S. Baumer</Author>
+			<Author>Daniel T. Kaplan</Author>
+			<Author>Nicholas J. Horton</Author>
+        </Authors>
+		<Publisher>CRC Press</Publisher>
+        <Year>2022</Year>
+        <Edition>1st</Edition>
+        <ISBN>978-1-498-72448-7</ISBN>
+	</book>
+</books>

@@ -1,0 +1,224 @@
+---
+title: 'Week 7 Assignment : Working with XML and JSON in R '
+author: "Ramnivas Singh"
+date: "03/21/2021"
+output:   
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: true
+    toc_depth: 5
+    toc_float:
+      collapsed: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Problem Statement
+Working with XML and JSON in R - Pick three of your favorite books on one of your favorite subjects. At least one of the books should have more than one author. For each book, include the title, authors, and two or three other attributes that you find interesting.
+Take the information that you’ve selected about these three books, and separately create three files which store the book’s information in HTML (using an html table), XML, and JSON formats (e.g. “books.html”, “books.xml”, and “books.json”).
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Acceptance Criteria
+* Write R code, using your packages of choice, to load the information from each of the three sources into separate R data frames. 
+* Are the three data frames identical?
+* Your deliverable is the three source files and the R code. If you can, package your assignment solution up into an .Rmd file and publish to rpubs.com
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Analysis
+* In the first record, Player Number, Player Name, Total Points, and the Round 1 - 7 results can be found.
+* In the second record, Player’s State, USCF ID, Pre-Rating and Post-Rating values can be found. 
+* Remaining other fields not relevant for this project 
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Approach
+* Source .CSV, .HTML and .XML files from AWS S3
+* Parse each file separately to extract desired data
+* Compare each data frame for data analysis and conclusion
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+```{r  results = FALSE, message = FALSE, warning = FALSE}
+library(DT)
+library(dplyr)
+library(htmltools)
+library (readr)
+library(aws.s3)
+library(jsonlite)
+library(rvest)
+library(XML)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Using AWS S3
+
+* Using AWS S3 to export .CSV, .HTML and .XML files \
+* AWS S3 is available to access data files from anywhere on internet\
+
+## Using laresbernardo/lares
+
+* Using laresbernardo/lares R package to protect AWS S3 credentials \
+* A config.yaml file maintained to retain AWS S3 access keys\
+
+```{r  results = FALSE, message = FALSE, warning = FALSE}
+library(lares)
+bucket<-get_creds()$`aws.s3`$bucket
+Sys.setenv(
+  "AWS_ACCESS_KEY_ID" = get_creds()$`aws.s3`$accessKeyId,
+  "AWS_SECRET_ACCESS_KEY" = get_creds()$`aws.s3`$accessKey,
+  "AWS_DEFAULT_REGION" = get_creds()$`aws.s3`$region)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Book Catalog
+Following 3 books with respective writers are used for this assignment
+```{r}
+# CSV
+books.csv<-s3read_using(FUN = read.csv, object = "Books.csv", bucket = bucket)
+datatable(books.csv, 
+          options = list(pageLength = 10,searching = FALSE,filter=FALSE, 
+                         pageLength = FALSE),rownames = FALSE)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# JSON (JavaScript Object Notation)
+## Load Book.json from S3
+```{r}
+# JSON
+books.vector <-get_object(bucket = bucket,object = "Books.json")
+books.json <- fromJSON(rawToChar(books.vector))
+```
+
+## Print dataframe into a table
+```{r}
+dataframe_json<-books.json$Books
+datatable(dataframe_json, 
+          options = list(pageLength = 10,searching = FALSE,filter=FALSE, 
+                         pageLength = FALSE),rownames = FALSE)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# XML (Extensible Markup Language )
+## Load Book.xml from S3
+```{r}
+# XML
+books.vector <-get_object(bucket = bucket,object = "Books.xml")
+books.xml <- xmlParse(rawToChar(books.vector)) 
+books.xml<- xmlSApply(xmlRoot(books.xml), function(x) xmlSApply(x, xmlValue))
+```
+
+## Print dataframe into a table
+```{r}
+dataframe_xml <-t(books.xml)
+datatable(dataframe_xml, 
+          options = list(pageLength = 10,searching = FALSE,filter=FALSE, 
+                         pageLength = FALSE),rownames = FALSE)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+
+# HTML (Hypertext Markup Language )
+## Load HTML from S3
+
+```{r}
+# HTML
+books.vector <-get_object(bucket = bucket,object = "Books.html")
+books.vector<-rawToChar(books.vector)
+# ignore 0th element (as NULL)
+dataframe_html <- (readHTMLTable(books.vector))[[1]]
+```
+
+## Print dataframe into a table
+```{r}
+datatable(dataframe_html, 
+          options = list(pageLength = 10,searching = FALSE,filter=FALSE, 
+                         pageLength = FALSE),rownames = FALSE)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Compare for similarities 
+To find different resulting data frames were identical
+
+* Compare JSON and XML
+* Compare JSON and HTML
+* Compare XML to HTML
+
+## Compare JSON and XML
+```{r}
+all.equal(dataframe_json, dataframe_xml)
+```
+
+### Findings
+* There are mismatch on data types - list, character
+* XML file retain a list of the authors if book is written by more than one author
+* Differences on Publisher mentioned due to ASCII character for O'Reilly Media
+* As per programmatic comparison - these data frames are not identical.
+* However, visual display of data in table shows data frames are identical
+
+## Compare JSON and HTML
+```{r}
+all.equal(dataframe_json, dataframe_html)
+```
+### Findings
+* There are mismatch on data types - author, year and publisher are not compatible
+* As per programmatic comparison - these data frames are not identical.
+* However, Vsual display of data in table shows data frames are identical
+
+## Compare xml and HTML
+```{r}
+all.equal(dataframe_xml, dataframe_html)
+```
+### Findings
+* There are mismatch on data types - list, character
+* XML file retain a list of the authors if book is written by more than one author
+* Differences on Publisher mentioned due to ASCII character for O'Reilly Media
+* As per programmatic comparison - these data frames are not identical
+* HTML data set is matrix, that can be a factor of this difference
+
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Conclusion
+
+* Despite the very different file types, HTML and JSON files were read into R using the same R code and functions
+* After all of the scraping was complete, all of the files produced data tables that were identical
+* While the characters in each of the data frames are essentially the same, it would take some additional work to make them completely equivalent
+
+--------------------------------------------------------------------------------
+
+\clearpage
