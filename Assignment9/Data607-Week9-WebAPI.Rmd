@@ -1,0 +1,237 @@
+---
+title: 'Week 9 Assignment: Web APIs'
+author: "Ramnivas Singh"
+date: "04/10/2021"
+output:   
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: true
+    toc_depth: 5
+    toc_float:
+      collapsed: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE, message = FALSE, warning = FALSE)
+```
+
+--------------------------------------------------------------------------------
+
+# Problem Statement
+Extracting content from diversified web resources, cleaning up the raw data, preparing them for the statistical analysis and actually performing the analysis it is far from being a simple
+task.
+The New York Times web site provides a rich set of APIs, as described here: https://developer.nytimes.com/apis. Task is to choose one of the New York Times APIs, construct an interface in R to read in the JSON data, and transform it into an R DataFrame.
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Acceptance Criteria
+**Preparing Data**\
+
+* Choose one of the New York Times APIs, request API key
+* Construct an interface in R to read in the JSON data
+* Transform data to an R dataframe
+
+**Reproducibility**\
+
+* Using R Markdown text and headers
+
+**Workflow**\
+
+* Included a brief description of the assigned problem.
+* Included an overview of your approach. 
+* Explained your reasoning.
+* Provided a conclusion (including any findings and recommendations).
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Approach 
+* New York times has provided various API's to query contents by using Web API's. 
+* Listed below are API's to fetch data in JSON format \
+  + [Archive API](https://developer.nytimes.com/docs/archive-product/1/overview)
+  + [Article Search](https://developer.nytimes.com/docs/articlesearch-product/1/overview)
+  + [Book API](https://developer.nytimes.com/docs/book-product/1/overview)
+  + [Community API](https://developer.nytimes.com/docs/community-api-product/1/overview)
+  + [Most Popular API](https://developer.nytimes.com/docs/most-popular-product/1/overview)
+  + [Moview Review](https://developer.nytimes.com/docs/movie-reviews-api/1/overview)
+  + [RSS Feed API](https://developer.nytimes.com/docs/rss-api/1/overview)
+  + [Semantic API](https://developer.nytimes.com/docs/semantic-api-product/1/overview)
+  + [Times Tag API](https://developer.nytimes.com/docs/timetags-product/1/overview)
+  + [Time Wire](https://developer.nytimes.com/docs/timewire-product/1/overview)
+  + [Top Stories API](https://developer.nytimes.com/docs/top-stories-product/1/overview)
+* These API's returns data in JSON format 
+* To access these API's, one needs to sign up which provides an access key to use
+* Top Stories API' is selected for this assignment\
+* Data is fetched from Top Stories API into R for using jsonlite API and used for further analysis
+* wordcloud2 is used to draw wordcloud for frequently found text
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Implementation
+## Load required libraries 
+```{r}
+library(DT)
+library(jsonlite)
+library(tidyjson)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(wordcloud)
+library(RColorBrewer)
+library(wordcloud2)
+library(tm)
+library(textclean)
+library(lares)
+```
+
+## Load NY Times API credentials from secret management
+```{r}
+baseurl<-get_creds()$`nyt.api`$baseurl
+apikey <-get_creds()$`nyt.api`$apikey
+```
+
+## Generic function to fetch the data from Web API
+```{r}
+get_data<- function(section) {
+  url<-paste(baseurl,section,".json?api-key=",sep = "")
+request <- fromJSON(URLencode(paste0(url, apikey)))
+stories <- request$results
+newdata<-data.frame(Subsection=stories$subsection, 
+                    Title=stories$title, 
+                    Abstract=stories$abstract, 
+                    Byline=stories$byline, 
+                    Created=as.Date(stories$created_date), 
+                    'Short URL'=stories$short_url, stringsAsFactors = FALSE);
+  return(newdata)
+}
+```
+
+## Generic function to plot Webcloud for given text
+```{r}
+get_wordcloud<-function(dataframe) {
+abstract<-dataframe$Abstract
+words <- Corpus(VectorSource(abstract))
+words <- words %>%
+tm_map(removeNumbers) %>%
+tm_map(removePunctuation) %>%
+tm_map(replace_contraction) %>%
+tm_map(replace_curly_quote) %>%
+tm_map(stripWhitespace)
+words <- tm_map(words, content_transformer(tolower))
+words <- tm_map(words, removeWords, stopwords("english"))
+dtm <- TermDocumentMatrix(words) 
+matrix <- as.matrix(dtm) 
+words <- sort(rowSums(matrix),decreasing=TRUE) 
+df <- data.frame(word = names(words),freq=words)
+df=df[-1,]
+set.seed(1234) # for reproducibility 
+wordcloud(words = df$word, freq = df$freq, min.freq = 1,
+          max.words=150, random.order=FALSE, rot.per=0.35,
+          colors=brewer.pal(8, "Dark2"))
+}
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Data Analysis
+
+## Top Stories
+These are sections available to select on Top Stories API : Automobiles, Books, Business, Health, Movies, Politics, Science, Sports, Technology, Travel, US and World.\
+API doesnt allow fetching top stories for all sections so only selected sections are used for data analysis
+
+### Automobiles 
+
+```{r}
+df<-get_data("automobiles")
+```
+
+#### Plot a table
+```{r}
+datatable(df)
+```
+#### Draw wordcloud
+```{r}
+get_wordcloud(df)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+### Books 
+
+```{r}
+df<-get_data("books")
+```
+
+#### Plot a 
+
+```{r}
+datatable(df)
+```
+#### Draw wordcloud
+
+```{r}
+get_wordcloud(df)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+### Sports 
+```{r}
+df<-get_data("sports")
+```
+
+#### Plot a table
+
+```{r}
+datatable(df)
+```
+#### Draw wordcloud
+
+```{r}
+get_wordcloud(df)
+```
+--------------------------------------------------------------------------------
+
+\clearpage
+
+### Health 
+
+```{r}
+df<-get_data("health")
+```
+
+#### Plot a table
+
+```{r}
+datatable(df)
+```
+#### Draw wordcloud
+
+```{r}
+get_wordcloud(df)
+```
+--------------------------------------------------------------------------------
+
+\clearpage
+
+# Conclusion
+* The New York Times Top Stories API provides top stories in various sections.
+* Top stories from automobiles, book and Sports sections are analyzed in this assignment
+* Integration using APIs gives a solid foundation with dataset to analyzed further
+* Additional features on Web API's including specifying query parameters, retrieved in JSON format are very helpful
+* Developer version of API's has limitations of fetching full dataset from various sections so only selected sections(Automobiles, Books, Sports, Health) are used in this analysis 
+
+
+
