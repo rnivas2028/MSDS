@@ -1,0 +1,107 @@
+---
+title: "DATA 605 : Homework Week1"
+author: "Ramnivas Singh"
+date: "08/24/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+    extra_dependencies: animate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+One of the most useful applications for linear algebra in data science is image manipulation.  We often need to compress, expand, warp, skew, etc. images.  To do so, we left multiply a transformation matrix by each of the point vectors.  
+
+For this assignment, build the first letters for both your first and last name using point plots in R.  
+
+Then, write R code that will left multiply (%>%) a square matrix (x) against each of the vectors of points (y). Initially, that square matrix will be the Identity matrix.  
+
+Use a loop that changes the transformation matrix incrementally to demonstrate 1) shear, 2) scaling, 3)  rotation , and 4) projection in animated fashion.  
+
+```{r results='hide', warning=FALSE, message=FALSE}
+library(dplyr)
+library(plotly)
+library(gifski)
+```
+
+First letters of my first and last name RS. Lets use a partial sin curve for the curve of the R, and straight lines are used for the balance of the R. Used a translated sin curve for the S.
+```{r} 
+# Plot R
+#x=c(rep(0,100), sin(seq(pi*-.05,pi,length.out=2000)), seq(.1,1,length.out=100))
+#y=c(seq(-1,1,length.out=100),seq(1,0,length.out=2000),seq(0,-1,length.out=100))
+
+# Plot S
+#x=c(sin(seq(-pi*.3,pi*2.3,length.out=2000))/2-1)
+#y=c(seq(-1,1,length.out=2000))
+
+# Plot RS 
+x=c(rep(0,100), sin(seq(pi*-.05,pi,length.out=2000)), seq(.1,1,length.out=100), sin(seq(-pi*.3,pi*2.3,length.out=2000))/2+1.75)
+y=c(seq(-1,1,length.out=100),seq(1,0,length.out=2000),seq(0,-1,length.out=100), seq(-1,1,length.out=2000))
+
+z=rbind(x,y)
+plot(y~x, xlim=c(-3,3), ylim=c(-3,3), col='grey')
+```
+
+Now Lets write a function to left multiply (%>%) a square matrix (x) against each of the vectors of points (y)
+```{r}
+leftMultiply  <- function(x,y){
+   x %*% y
+}
+leftMultiply(matrix(rep(seq(1,3, length.out=3),3), nrow = 3, ncol = 3),diag(3))
+
+```
+
+### Shear
+
+To plot sear shear lets increase above 0 the element at the lower left corner of the identity matrix. As we increase it elements further away from the 0 line on the y axis are pulled either right (if positive) or left (if negative).
+
+```{r, animation.hook="gifski"}
+for (i in seq(0,1,length.out=20)) {
+  z1<-apply(z,2,function(x) leftMultiply(x,matrix(c(1,i,0,1),nrow=2,ncol=2)))
+   plot(z1[2,]~z1[1,], xlim=c(-3,3), ylim=c(-3,3), col='grey')
+}
+
+```
+
+### Scaling
+
+Scaling is accomplished as a simple multiplication of the values
+
+```{r, animation.hook="gifski"}
+for (i in seq(1,4,length.out=20)) {
+  z1<-apply(z,2,function(x) leftMultiply(x,matrix(c(i,0,0,i),nrow=2,ncol=2)))
+   plot(z1[2,]~z1[1,], xlim=c(-3,3), ylim=c(-3,3), col='grey')
+}
+```
+
+### Rotation
+
+Rotation is accomplished by shear the matrix multiple times using trigonometric functions. 
+
+```{r, animation.hook="gifski"}
+for (i in seq(0,pi*2,length.out=20)) {
+  z1<-apply(z,2,function(x) leftMultiply(x,matrix(c(cos(i),-sin(i),sin(i),cos(i)),nrow=2,ncol=2)))
+   plot(z1[2,]~z1[1,], xlim=c(-3,3), ylim=c(-3,3), col='grey')
+}
+```
+
+### Projection
+
+Projection is accomplished by updating the projection to rotate around the Z axis.
+
+```{r, animation.hook="gifski"}
+for (i in seq(0,2*pi,length.out=20)) {
+  tempZ<-rbind(z,rep(0,ncol(z)))
+  z1<-apply(tempZ,2,function(x) leftMultiply(x,matrix(c(1,0,0,0,cos(i),-sin(i),0,sin(i),cos(i)),nrow=3,ncol=3)))
+   plot(z1[2,]~z1[1,], xlim=c(-3,3), ylim=c(-3,3), col='grey')
+}
+```
+
+

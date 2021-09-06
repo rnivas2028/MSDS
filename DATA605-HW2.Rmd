@@ -1,0 +1,95 @@
+---
+title: "DATA 605 : ASSIGNMENT 2"
+author: "Ramnivas Singh"
+date: "09/05/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+    extra_dependencies: animate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+# Problem set 1 
+ 1. Show that $A^TA \neq AA^T$ in general. (Proof and demonstration.)
+
+## Solution
+
+The most simple situation is when matrix A has n rows and m columns and m does not equal n, then the resulting matrix will have m(2) columns and n(2) rows; the opposite situation (the matrix is transposed) will result in a different number of columns and rows.
+
+Due to the order of multiplication in that also applies when matrix A * matrix B does not equal matrix B * matrix A, matrix A transposed * matrix A does not equal matrix A * matrix A transposed. 
+
+```{r}
+# Create a 3 x 3 matrix.
+matrix1 <- matrix(c(1,3,0,4,1,5,2,0,7), nrow = 3, byrow = TRUE)
+matrix1
+# using R get the transpose for matrix1 matrices.
+matrix1T <- t(matrix1)
+matrix1T
+#calculate both  ATA and AAT.
+ATA <- matrix1T %*% matrix1
+ATA
+AAT <- matrix1 %*% matrix1T
+AAT
+#It's clear that ATA???AAT for this "general" matrix.
+# check programmatically AAT == ATA
+AAT == ATA
+```
+
+
+2. For a special type of square matrix **A**, we get $A^T*A = A * A^T$. Under what conditions could this be true?  (Hint:  The Identity matrix **I** is an example of such a matrix).
+
+## Solution 
+
+Since the transpose will equal the original matrix, symmetric matrices will have the transpose x matrix = matrix x transpose, lets try to prove it using R code.
+```{r}
+mat <- matrix(c(1,0,3,0,2,5,3,5,3), nrow=3, ncol=3) 
+
+# Print Matric
+mat
+
+# Transpose Matric
+t(mat)
+
+mat%*%t(mat)
+
+t(mat)%*%mat
+```
+
+
+# Problem set 2
+
+Matrix factorization is a very important problem.  There are supercomputers built just to  do  matrix  factorizations.   Every  second  you  are  on  an  airplane,  matrices  are  being factorized.  Radars that track  ights use a technique called Kalman Filtering.  At the heart of Kalman Filtering is a Matrix Factorization operation.  Kalman Filters are solving linear systems of equations when they track your flight using radars.
+
+Write  an  R  function  to  factorize  a  square  matrix  A  into  LU  or  LDU,  whichever  you prefer. You don't have to worry about permuting rows of A and you can assume that A is less than  5x5,  if  you  need  to  hard-code  any  variables  in  your  code.
+
+## Solution
+Use the built function to see that that LDU = A.
+
+$A = L * U$
+
+For a 3x3 matrix:
+
+```{r}
+factorization <- function(A){
+  e21 <- matrix(c(1,-A[2,1]/A[1,1],0,0,1,0,0,0,1), nrow=3)
+  matrixY <- e21 %*% A
+  
+  e31 <- matrix(c(1,0,-matrixY[3,1]/matrixY[1,1],0,1,0,0,0,1),nrow=3) 
+  matrixY <- e31 %*% matrixY
+  e32 <- matrix(c(1,0,0,0,1,-matrixY[3,2]/matrixY[2,2],0,0,1),nrow=3)
+  U <- e32 %*% matrixY
+  L <- solve(e21) %*% solve(e31) %*% solve(e32)
+  
+  A == L %*% U
+}
+A <- matrix(c(1,2,3,1,1,1,2,0,1),nrow=3)
+factorization(A)
+```
