@@ -1,0 +1,182 @@
+---
+title: "DATA 605 : Assignment Week3"
+author: "Ramnivas Singh"
+date: "09/12/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+```{r results='hide', warning=FALSE, message=FALSE}
+# Load the library
+library(pracma)
+library(Matrix)
+```
+### Problem set 1
+#### (1). What is the rank of the matrix A?
+
+\begin{bmatrix} 1 & 2 & 3 & 4 \\
+-1 & 0 & 1 & 3 \\
+0 & 1 & -2 & 1 \\
+5 & 4 & -2 & -3 \\
+\end{bmatrix}
+
+#### Solution :
+Rank Matrix for given problem is : 
+```{r}
+# The rank is how many rows are unique i.e not made of other rows. Likewise for columns
+A <- matrix(c(1,2,3,4,-1,0,1,3,0,1,-2,1,5,4,-2,-3), nrow = 4, ncol = 4, byrow = TRUE)
+rankMatrix(A)[1]
+```
+
+#### (2). Given an mxn matrix where m > n, what can be the maximum rank? The minimum rank, assuming that the matrix is non-zero?
+
+#### Solution :
+The maximum rank is always min(m,n). In this case it will be n. A non-zero matrix contains at least one element that is not zero. So there will be at least 1 row that has non-zero value so a minimum rank of 1.
+
+#### (3). What is the rank of matrix B?
+
+\begin{bmatrix} 1 & 2 & 1 \\
+3 & 6 & 3 \\
+2 & 4 & 2 \\
+\end{bmatrix}
+
+#### Solution : 
+```{r}
+B <- matrix(c(1,2,1,3,6,3,2,4,2), nrow = 3, ncol = 3, byrow = TRUE)
+```
+We will use equation operations to move from one system to another, all the while keeping the solution set the same. With the right sequence of operations, our aim is to arrive at a simpler equation to solve.
+$$
+3R1−R2,2R1−R3
+$$
+To perform 3R1−R2, lets multiple R1 by 3 and subtract R2, assign value to R2
+```{r}
+#
+R2<-(3*B[1,]-B[2,])
+print(R2)
+```
+
+To perform 2R1−R3, lets multiple R1 by 2 and subtract R3, assign value to R3
+```{r}
+#
+R3<-(2*B[1,]-B[3,])
+print(R3)
+```
+
+Lets fit new R2 and R3 into equation  matrix
+```{r}
+B_Simplified <- matrix(c(1,2,1,R2,R3), nrow = 3, ncol = 3, byrow = TRUE)
+print(B_Simplified)
+```
+So only one row is not made of other rows in simplified matrix so rank of the matrix is 1
+
+Lets try validating it using program
+```{r}
+# Identify Rank Matrix using R function
+rankMatrix(B)[1]
+```
+
+Rank Matrix same as identified by equation simplification and R function
+
+### Problem set 2
+Compute the eigenvalues and eigenvectors of the matrix A. You'll need to show your work. You'll need to write out the characteristic polynomial and show your solution.
+
+A=
+\begin{bmatrix} 1 & 2 & 3 \\
+0 & 4 & 5 \\
+0 & 0 & 6 \\
+\end{bmatrix}
+
+
+#### Solution : 
+
+An eigenvalue is denoted by lambda, λ, and is defined as a scalar that when multiplied by a non-zero vector x satisfies the following:
+
+I=
+\begin{bmatrix} I & 0 & 0 \\
+0 & I & 0 \\
+0 & 0 & I \\
+\end{bmatrix}
+
+To find the solutions that don’t end up as x=0, the matrix (A−λI) is set to |A−λI|=0, which is called the characteristic equation.
+
+The lambda identity matrix λI is thus:
+
+ λI=\begin{bmatrix} λ & 0 & 0 \\
+0 & λ & 0 \\
+0 & 0 & λ \\
+\end{bmatrix}
+
+|A−λI| = det
+\begin{bmatrix} 1−λ & 2 & 3 \\
+0 & 4-λ & 0 \\
+0 & 0 & 6-λ \\
+\end{bmatrix}
+
+=(1−λ)[(4−λ)(6−λ)−(0∗0)]−(2)[(0)(6−λ)−(0∗0]+(3)[(0∗0)−(0∗4−λ)]
+
+As per the equation : 
+|A−λI|=0
+
+So 
+=(1−λ)[(4−λ)(6−λ)]=0
+
+So λ are : 1, 4 and 6
+
+Now lets calculate Eigenvalues
+
+λ=1
+
+=det(A-1(I))
+
+\begin{bmatrix} 1.0000 \\
+0.0000 \\
+0.0000 \\
+\end{bmatrix}
+
+
+λ=4
+
+=det(A-4(I))
+
+\begin{bmatrix} 1.6000 \\
+2.5000 \\
+1.0000 \\
+\end{bmatrix}
+
+λ=6
+
+=det(A-6(I))
+
+\begin{bmatrix} 0.6667 \\
+1.0000 \\
+0.0000 \\
+\end{bmatrix}
+
+
+
+Lets validate these values using R. First of all, lets define Matrix as A
+```{r}
+A <- matrix(c(1,2,3,0,4,5,0,0,6), nrow = 3, ncol = 3, byrow = TRUE)
+
+```
+
+
+```{r}
+# Using R to indentify eigenvalues and eigenvector
+e <- eigen(A)
+# Print eigenvalues 
+e$values
+# Print eigenvalues 
+e$vectors
+
+```
