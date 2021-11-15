@@ -1,0 +1,27 @@
+---
+title: "DATA 606 Data Project Proposal"
+author: "Ramnivas Singh"
+date: "04/11/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: yes
+    toc_depth: 5
+    toc_float:
+      collapsed: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+subtitle: Adult Census Income
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE, message = FALSE, warning = FALSE)
+```
+
+--------------------------------------------------------------------------------
+
+\clearpage
+
+## Data Preparation

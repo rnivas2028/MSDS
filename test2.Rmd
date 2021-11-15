@@ -1,0 +1,83 @@
+---
+title: "DATA 605 : Homework Week1"
+author: "Ramnivas Singh"
+date: "08/24/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+    extra_dependencies: animate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+library(animation)
+```{r}
+
+x=c(rep(0,500),seq(0,1,length.out=1000), rep(1,500))
+y=c(seq(-1,1,length.out=500),rep(0,1000), seq(-1,1,length.out=500))
+z=rbind(x,y)
+plot(y~x, xlim=c(-3,3), ylim=c(-3,3))
+
+dev.control('enable')
+
+myani=ani.record(reset = TRUE, replay.cur = FALSE)
+
+
+a=diag(2)
+x11()
+for (i in seq(-3,3,length.out=100)){
+  a[1,1]=i
+  newmat=apply(z,2,function(x) a%*%x)
+  plot(newmat[2,]~newmat[1,], xlim=c(-3,3), ylim=c(-3,3))
+  ani.record()
+  #Sys.sleep(1)
+}
+
+a=diag(2) 
+for (i in seq(-3,3,length.out=100)){
+  
+  a[1,2]=i
+  newmat=apply(z,2,function(x) a%*%x)
+  plot(newmat[2,]~newmat[1,], xlim=c(-3,3), ylim=c(-3,3))
+  ani.record()
+  #Sys.sleep(1)
+}
+
+a=diag(2) 
+for (i in seq(-3,3,length.out=100)){
+  
+  a[2,1]=i
+  newmat=apply(z,2,function(x) a%*%x)
+  plot(newmat[2,]~newmat[1,], xlim=c(-3,3), ylim=c(-3,3))
+  ani.record()
+  #Sys.sleep(1)
+}
+
+a=diag(2) 
+for (i in seq(-3,3,length.out=100)){
+  
+  a[2,2]=i
+  newmat=apply(z,2,function(x) a%*%x)
+  plot(newmat[2,]~newmat[1,], xlim=c(-3,3), ylim=c(-3,3))
+  ani.record()
+  #Sys.sleep(1)
+}
+
+myf=function(x){matrix(c(cos(x), -sin(x), sin(x), cos(x)), byrow=TRUE, nrow=2)}
+
+for (i in seq(0,20,length.out=100)){
+  a=myf(i)
+  newmat=apply(z,2,function(x) a%*%x)
+  plot(newmat[2,]~newmat[1,], xlim=c(-3,3), ylim=c(-3,3))
+  ani.record()
+  #Sys.sleep(1)
+}
+
+```

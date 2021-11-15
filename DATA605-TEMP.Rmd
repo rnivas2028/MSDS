@@ -1,0 +1,13 @@
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+### Problem  - C16 (Page 286) Working within the vector space
+
+\begin{bmatrix} 1 & 2 & 3 & 4 \\
+-1 & 0 & 1 & 3 \\
+0 & 1 & -2 & 1 \\
+5 & 4 & -2 & -3 \\
+\end{bmatrix}
