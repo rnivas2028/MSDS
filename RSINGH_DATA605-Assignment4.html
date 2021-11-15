@@ -309,7 +309,7 @@ pre code {
 </div>
 <div id="vectorize-image-data" class="section level3">
 <h3>Vectorize image data</h3>
-<p>Here we vecorize the array. Matri is created for image data</p>
+<p>Here we vecorize the array. Matrix is created for image data</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>flat<span class="ot">=</span><span class="fu">matrix</span>(<span class="dv">0</span>, <span class="fu">length</span>(files), <span class="fu">prod</span>(<span class="fu">dim</span>(im)))</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(files)){</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  r<span class="ot">=</span><span class="fu">as.vector</span>(im[i,,,<span class="dv">1</span>]); g<span class="ot">=</span><span class="fu">as.vector</span>(im[i,,,<span class="dv">2</span>]);b<span class="ot">=</span><span class="fu">as.vector</span>(im[i,,,<span class="dv">3</span>])</span>

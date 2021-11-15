@@ -1,0 +1,164 @@
+---
+title: "DATA 605 : Assignment Week4"
+author: "Ramnivas Singh"
+date: "09/18/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+
+### Problem set 1 : With the attached data file, build and visualize  eigenimagery that accounts for 80% of the variability.  
+
+```{r results='hide', warning=FALSE, message=FALSE}
+# Load the library
+library(jpeg)
+library(EBImage)
+library(doParallel)
+library(foreach)
+library(OpenImageR)
+library(RSpectra)
+
+```
+
+### Prepare for Image Processing
+```{r}
+# File count 17
+files=list.files("C:/Users/ramni/Desktop/CUNY/Data605/Week4",pattern="\\.jpg")[1:17] 
+# Print file list
+files
+```
+
+####  View Shoes Function
+as per Professor - Dr. Fulton
+```{r}
+height=120; 
+width=250;
+plot_jpeg = function(path, add=FALSE)
+{ jpg = readJPEG(path, native=T) # read the file
+  res = dim(jpg)[2:1] # get the resolution, [x, y]
+  if (!add) # initialize an empty plot area if add==FALSE
+    plot(1,1,xlim=c(1,res[1]),ylim=c(1,res[2]),asp=1,type='n',xaxs='i',yaxs='i',xaxt='n',yaxt='n',xlab='',ylab='',bty='n')
+    #rasterImage draws a raster image at the given locations and sizes.
+    rasterImage(jpg,1,1,res[1],res[2])
+}
+```
+
+### Load image data into an Array
+EBImage is used for image processing and analysis. Loading the data into the array with required dimensions. Resize function scales the images to the specified dimensions.
+```{r}
+im=array(rep(0,length(files)*height*width*3), dim=c(length(files), height, width,3))
+for (i in 1:length(files)){
+  temp= EBImage::resize(readJPEG(files[i]),120, 250)
+  im[i,,,]=array(temp,dim=c(1, 120, 250,3))
+}
+# Display dimension of image array
+dim(im)
+```
+
+### Vectorize image data
+Here we vecorize the array. Matri is created for image data
+```{r}
+flat=matrix(0, length(files), prod(dim(im)))
+for (i in 1:length(files)){
+  r=as.vector(im[i,,,1]); g=as.vector(im[i,,,2]);b=as.vector(im[i,,,3])
+  flat[i,] <- t(c(r, g, b))
+}
+shoes=as.data.frame(t(flat))
+```
+
+### Actual Plots
+Render the actual plots. In viewing the images we see that there is quite a bit of fine detail that is tripping it up.
+
+```{r}
+par(mfrow=c(3,3))
+par(mai=c(.3,.3,.3,.3))
+for (i in 1:length(files)){ 
+plot_jpeg(writeJPEG(im[i,,,]))
+}
+```
+Blurring the images might allow a certain refinement.
+
+### Covariance and Correlation
+Compute the covariance or correlation shoes vector. 
+```{r}
+scaled=scale(shoes, center = TRUE, scale = TRUE)
+Sigma_=cor(scaled)
+```
+
+### Eigenvalues and Eigenvectors
+Computes a limited number of eigenvalues and eigenvectors of a matrix. Defaults to "LM", meaning largest magnitude eigenvalues
+```{r}
+myeigen=eigs(Sigma_,5,which="LM")
+myeigen
+cumsum(myeigen$values) / sum(eigen(Sigma_)$values)
+```
+We see that effacing the small details has of course improved the variability accounted for. These images seem a more reflective of the actual differences.
+
+### Matrix Diagonals
+Extract or replace the diagonal of a matrix, or construct a diagonal matrix.
+```{r}
+scaling=diag(myeigen$values[1:5]^(-1/2)) / (sqrt(nrow(scaled)-1))
+eigenshoes=scaled%*%myeigen$vectors[,1:5]%*%scaling
+```
+
+### Principal Components Analysis
+princomp performs a principal components analysis on the given numeric data matrix and returns the results as an object of class princomp.
+```{r}
+newdata=im
+dim(newdata)=c(length(files),height*width*3)
+mypca=princomp(t(as.matrix(newdata)), scores=TRUE, cor=TRUE)
+```
+
+### Eigenshoes (2)
+Generate Eigenshoes based on principal components score
+```{r}
+pcaScores=t(mypca$scores)
+dim(pcaScores)=c(length(files),height,width,3)
+par(mfrow=c(5,5))
+par(mai=c(.001,.001,.001,.001))
+for (i in 1:length(files)){
+plot_jpeg(writeJPEG(pcaScores[i,,,], bg="white"))  
+}
+```
+
+```{r}
+for (i in 1:length(files)){
+  temp= EBImage::gblur(EBImage::resize(readJPEG(files[i]),120, 250),sigma = 8, radius=5)
+  im[i,,,]=array(temp,dim=c(1, 120, 250,3))
+}
+flat=matrix(0, length(files), prod(dim(im)))
+for (i in 1:length(files)){
+  r=as.vector(im[i,,,1]); g=as.vector(im[i,,,2]);b=as.vector(im[i,,,3])
+  flat[i,] <- t(c(r, g, b))
+}
+shoes=as.data.frame(t(flat))
+par(mfrow=c(3,3))
+par(mai=c(.3,.3,.3,.3))
+for (i in 1:length(files)){ 
+plot_jpeg(writeJPEG(im[i,,,]))
+}
+```
+
+### Variance Capture
+```{r}
+rpca=round(mypca$sdev[1:17]^2/ sum(mypca$sdev^2),3)
+cumsum(rpca)
+```
+
+### Eigenimagery that accounts for 80 percent of the variability
+
+```{r}
+PVE <- myeigen$values / sum(myeigen$values)
+round(PVE, 3)
+```
+The first principal component explains 69 percent of the variability, and the second principal component explains 10 percent. Together, the first two principal components explain 79 percent of the variability. In order to cover our 80 percent, we would need to take into account the third component for a total of 84 percent variability.
