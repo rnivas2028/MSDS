@@ -1,0 +1,118 @@
+---
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+
+#### Problem 2 Page 321
+
+Let X be a continuous random variable with values uniformly distributed over the interval [0, 20].
+(a) Find the mean and variance of X.
+(b) $P(|X - 10| \ge 2)$, $P(|X - 10| \ge 5)$, $P(|X - 10| \ge 9)$ and $P(|X - 10| \ge 20)$ exactly. How do your answers compare with those of
+Exercise 1? How good is Chebyshev's Inequality in this case?
+
+#### Answer :
+
+(a) Chebyshev's Inequality mean and variance are 
+
+$E(X)={(a+b)}/2$
+
+$Var(X)={(b - a)^2}/12$
+
+So Mean $E(X)$ is :
+```{r}
+print((0+20)/2)
+```
+
+and Variance $Var(X)$ is : 
+```{r}
+print(((20-0)**2)/12)
+```
+
+(b) $P(|X - 10| \ge 2)$ =$1-P(|X - 10| \lt 2)$
+
+=$1-P(-2 \lt (X -10) \lt 2)$
+
+=$1-P(-2+10 \lt X \lt 2 +10)$
+
+=$1-P(8 \lt X \lt 12)$
+
+=$1-[P(X \lt 12) -  P(X \le 8)]$
+
+=$1-[12/20 - 8/20]$
+
+```{r}
+print(1-((12/20) - (8/20)))
+```
+
+$P(|X - 10| \ge 5)$
+
+=$1-P(|X - 10| \lt 5)$
+
+=$1-P(-5 \lt (X-10) \lt 5)$
+
+=$1-P(-5+10 \lt X \lt 5+10)$
+
+=$1-P(5 \lt X \lt 15)$
+
+=$1-[P(X \lt 15) -  P(X \le 5)]$
+
+```{r}
+print(1-((15/20) - (5/20)))
+```
+
+$P(|X - 10| \ge 9)$
+
+=$1-P(|X - 10| \lt 9)$
+
+=$1-P(-9 \lt (X-10) \lt 9)$
+
+=$1-P(-9+10 \lt X \lt 9+10)$
+
+=$1-P(1 \lt X \le 19)$
+
+=$1-[P(X \lt 19) -  P(X \le 1)]$
+
+```{r}
+print(1-((19/20) - (1/20)))
+```
+
+$P(|X - 10| \ge 20)$
+
+=$1-P(|X - 10| \lt 20)$
+
+=$1-P(-20 \lt (X-10) \lt 20)$
+
+=$1-P(-20+10 \lt X \lt 20+10)$
+
+=$1-P(-10 \lt X \le 30)$
+
+=$1-P(0 \lt X \le 20)$
+
+=$1-1$
+
+```{r}
+print(1-1)
+```
+
+How do your answers compare with those of Exercise 1? How good is Chebyshev's Inequality in this case?
+
+Answer :
+
+From problem 1 : 
+
+a. $\epsilon=2$, the upper bound is $1$ from this problem upper bound is $0.8$
+b. $\epsilon=5$, the upper bound is $1$ from this problem upper bound is $0.5$
+c. $\epsilon=9$, the upper bound is $\approx 0.4115$ from this problem upper bound is $0.1$
+d. $\epsilon=20$, the upper bound is $\approx 0.0833$ from this problem upper bound is $0.0$
+
+Chebyshev estimates are in general not very accurate. We see variance for $\epsilon=2, 5, 9, 20$

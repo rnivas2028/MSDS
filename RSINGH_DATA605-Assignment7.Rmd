@@ -1,0 +1,147 @@
+---
+title: "DATA 605 : Assignment Week 7"
+author: "Ramnivas Singh"
+date: "10/03/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+
+1 : Let X1, X2, . . . , Xn be n mutually independent random variables, each of which is uniformly distributed on the integers from 1 to k. Let Y denote the minimum of the Xi’s. Find the distribution of Y
+
+Answer : Suppose that each Xi has k possibilities: 1, 2, ..., k. Then, the total possible number of assignments for the entire collection of random variables X1, X2, ..., Xn is $$ k^n $$ This will form the denominator for our probability distribution function.
+
+Now, the number of ways of getting Y = 1 is $$ k^n - (k-1)^n / k^n$$, since kn represents the total number of options and (k −1)n represents all of the options where none of the Xi’s are equal to 1.
+
+When X = 1:
+$$ P(X=1) = k^n - (k-1)^n / k^n$$
+
+Similarly when X = 2:
+$$ P(X=2) = (k-2+1)^n - (k-2)^n / k^n$$
+Also  when X = 3:
+$$ P(X=3) = (k-3+1)^n - (k-3)^n / k^n$$
+
+Proceeding in the same manner, we see that, in general, if Y = j then there are 
+$$ P(X=j) = (k-j+1)^n - (k-j)^n / k^n$$
+ways to assign X1, ..., Xn so that the minimum value is j. Therefore, we should define m(j) to be $$ (k-j+1)^n - (k-j)^n / k^n$$
+
+-------------------------------------------------------------------------------------------------------\n
+
+
+2. Your organization owns a copier (future lawyers, etc.) or MRI (future doctors). This machine has a manufacturer’s expected lifetime of 10 years. This means that we expect one failure every ten years. (Include the probability statements and R Code for each part.)
+
+a. What is the probability that the machine will fail after 8 years?. Provide also the expected value and standard deviation. Model as a geometric. (Hint: the probability is equivalent to not failing during the first 8 years..)
+
+b. What is the probability that the machine will fail after 8 years?. Provide also the expected value and standard deviation. Model as an exponential
+
+c. What is the probability that the machine will fail after 8 years?. Provide also the expected value and standard deviation. Model as a binomial. (Hint: 0 success in 8 years)
+
+d. What is the probability that the machine will fail after 8 years?. Provide also the expected value and standard deviation. Model as a Poisson
+
+Answer :
+
+a. Model as a geometric
+Machine has a manufacturer’s expected lifetime of 10 years. This means that we expect one failure every ten years
+
+P(machine will fail after 10 years) = p=1/10 
+P(machine will not fail after 10 years) = q =1-p 
+
+Geometric Distribution :
+
+$$ P(X=n) = (1-p)n-1*p$$
+
+```{r}
+# probability that the machine will fail after 8 year
+#probability_pgeom=((1-1/10)**(8-1))*.1
+#probability_pgeom
+
+n=8
+probability_pgeom  <- 1-pgeom(n-1, 0.1) 
+probability_pgeom
+
+# expected value (np) 1/p
+expected_value <-1/0.1
+expected_value
+
+# standard deviation = sqrt(1-p/p^2) or sqrt(q/p^2)
+
+standard_deviation <-sqrt(.9/.1^2)
+standard_deviation
+```
+
+b. Model as a exponential
+
+$$  P(X>=8)=e ^−(k/u) $$
+
+```{r}
+# probability that the machine will fail after 8 year
+k=8
+u=10
+probability_pexpo  <- exp(-8/10) 
+probability_pexpo
+
+
+# expected value 1/lambda (where lambda= 1/p)
+expected_value <-1/0.1
+expected_value
+
+# standard deviation = sqrt(1/lambda^2)
+
+standard_deviation <-sqrt((1/.1)**2) # (1/1/10)
+standard_deviation
+
+```
+
+c. Model as a binomial.
+
+$$  P(X>8)=1∗p^x(1−p)^  n−x $$
+
+```{r}
+# probability that the machine will fail after 8 year
+n=8
+x=0
+probability_binomial  <- 1*(.1)^(0)*(1-.1)^(8-0)
+probability_binomial
+
+# expected value np
+expected_value <-8*.1
+expected_value
+
+# standard deviation = sqrt(n*p*q)
+
+standard_deviation <-sqrt(8*.1*.9)
+standard_deviation
+
+```
+
+d. Model as a Poisson
+
+$$  P(X>8)=(λ^x *e ^-λ) / x !$$
+
+```{r}
+# probability that the machine will fail after 8 year
+x=0
+probability_poisson  <- .8^(8)*exp(-.8/8)
+probability_poisson
+
+# expected value (lambda=np/t, t=1) 
+expected_value <-8*.1/1
+expected_value
+
+# standard deviation = sqrt(lambda)
+
+standard_deviation <-sqrt(.8)
+standard_deviation
+
+```
+

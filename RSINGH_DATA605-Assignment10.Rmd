@@ -1,0 +1,121 @@
+---
+title: "DATA 605 : Week 10 - Markov Chains / Random Walks"
+author: "Ramnivas Singh"
+date: "10/31/2021"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+### Markov Chains / Random Walks
+
+A Markov chain is a mathematical system that experiences transitions from one state to another according to certain probabilistic rules. The defining characteristic of a Markov chain is that no matter how the process arrived at its present state, the possible future states are fixed. In other words, the probability of transitioning to any particular state is dependent solely on the current state and time elapsed.
+
+A random walk on a directed graph consists of a sequence of vertices generated from a start vertex by selecting an edge, traversing the edge to a new vertex, and repeating the process. We will see that if the graph is strongly connected, then the fraction of time the walk spends at the various vertices of the graph converges to a stationary probability distribution.
+
+***
+
+#### Question
+Smith is in jail and has 1 dollar; he can get out on bail if he has 8 dollars. A guard agrees to make a series of bets with him. If Smith bets A dollars, he wins A dollars with probability .4 and loses A dollars with probability .6. Find the probability that he wins 8 dollars before losing all of his money if:
+
+(a) He bets 1 dollar each time (timid strategy).
+
+(b) He bets, each time, as much as possible but not more than necessary to bring his fortune up to 8 dollars (bold strategy).
+
+(c) Which strategy gives Smith the better chance of getting out of jail?
+
+#### Aneswer (a)
+
+As we know, probability of winning is 0.4
+$$
+p=0.4
+$$
+So probability of losing is 0.6
+$$
+q= 1-p = >0.6
+$$
+Let say minimum bet amount 
+$$
+x =1 
+$$
+Amount needed to win the bet y=8
+$$
+y =8
+$$
+$$
+\frac{(\frac{q}{p})^{x}-1}{(\frac{q}{p})^{y}-1}
+$$
+
+$$
+\frac{1-(\frac{.6}{.4})^{1}}{1-(\frac{.6}{.4})^{8}}\\
+$$
+The probability comes out to roughly 0.02 
+
+```{r}
+p<-0.4
+q<-0.6
+x<-1
+y<-8
+prob_win<- (1 - (q/p)^x) / (1 - (q/p)^y)
+prob_win
+
+# Round upto 2 decimal place
+prob_win<-round(prob_win,2)
+prob_win
+```
+
+But what is the underlying mathematics at play? Well he only bets 1 dollar at a time so the states are 0,1,2,3,4,5,6,7 and 8. We want to show
+
+$$
+P_i=(S_8<S_0)=P(S_8<S_0|X_0=i)
+$$
+
+#### Aneswer (b)
+
+He bets, each time, as much as possible but not more than necessary to bring his fortune up to 8 dollars (bold strategy).
+
+The states on chain are 0, 1, 2, 4, and 8 dollars. 
+
+$$
+\begin{bmatrix} 1 & 0 & 0 & 0 & 0 \\ .6 & 0 & .4 & 0 & 0 \\ .6 & 0 & 0 & .4 & 0 \\ .6 & 0 & 0 & 0 & .4 \\ 0 & 0 & 0 & 0 & 1 \end{bmatrix}
+$$
+
+
+Lets create the system
+```{r}
+matrix_var <- matrix(c(1,0,0,0,0,0.6,0,0.4,0,0,0.6,0,0,0.4,0,0.6,0,0,0,0.4,0,0,0,0,1), ncol=5,nrow=5, byrow = TRUE)
+matrix_var
+```
+
+Create the initial state vector 
+```{r}
+initial_vector <- matrix(c(0,1,0,0,0), ncol=5,nrow = 1,byrow = TRUE)
+initial_vector
+```
+
+
+```{r}
+p1 <- initial_vector%*%matrix_var
+p2<-p1%*%matrix_var
+p3<-p2%*%matrix_var
+p4<-p3%*%matrix_var
+p4
+```
+
+Probability is 0.064
+
+#### Aneswer (c) 
+
+Which strategy gives Smith the better chance of getting out of jail?
+0.064 > 0.020. Bold strategy appears to be good, and gives Smith the best chance to get out of jail
+***
+

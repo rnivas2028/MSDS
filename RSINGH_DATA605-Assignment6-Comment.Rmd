@@ -1,0 +1,70 @@
+---
+title: "DATA 605 : Assignment Week 6"
+author: "Ramnivas Singh"
+date: "10/03/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+
+```{r}
+combination <- function(n,r){return(factorial(n)/(factorial(n-r)*factorial(r)))}
+result <- combination(6,3)
+result
+```
+
+```{r}
+result <- combination(5,4)*(0.2**4)*0.8**1
+result
+```
+
+```{r}
+result <- combination(7,2)
+result
+```
+
+```{r}
+result <- combination(26,26)
+result
+```
+
+```{r}
+result <- combination(4,3)*(0.2**3)*0.8**1
+result
+```
+```{r}
+result <- combination(6,2)
+result
+```
+```{r}
+result <- combination(10,9)
+result
+```
+
+```{r}
+result <- combination(8,5)*(0.3**5)*0.7**3
+result
+```
+
+
+Page 114 / Question 11 : A restaurant offers apple and blueberry pies and stocks an equal number of each kind of pie. Each day ten customers request pie. They choose, with equal probabilities, one of the two kinds of pie. How many pieces of each kind of pie should the owner provide so that the probability is about .95 that each customer gets the pie of his or her own choice?
+
+Answer : Here probability of ordering an apple pie =1/2
+
+Therefore probability of ordering at most a number of apple pies by 10 customer = P(X<=a) >=0.95
+
+Solving for above with binomial distribution with parameter n=10 and p=0.5 : a = 8
+
+We have to look for the probability that 0, 1, 2, ..., 10 out of 10 customers choose, say, apple pie. This distribution is given by (10n)pn(1−p)10−n with p=0.5. 
+
+Hence 8 number of each type of pies should be kept to have 95% satisfaction rate

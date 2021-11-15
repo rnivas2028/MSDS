@@ -1,0 +1,83 @@
+---
+title: "DATA 605 : Week 11 - Linear Regression Model"
+author: "Ramnivas Singh"
+date: "11/07/2021"
+output:
+  pdf_document:
+    toc: no
+    toc_depth: '5'
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+---
+
+Lets use the MPG dataset. https://archive.ics.uci.edu/ml/datasets/Auto+MPG. We need to tidy the data.
+
+```{r}
+auto <- read.table(url("https://archive.ics.uci.edu/ml/machine-learning-databases/auto-mpg/auto-mpg.data"), header =FALSE)
+```
+
+
+```{r}
+names(auto) <- c("mpg", "cylinders", 
+                 "displacement", 
+                 " horsepower", 
+                 "weight", 
+                 "acceleration", 
+                 "model year",
+                 "origin", 
+                 "car name")
+```
+
+
+```{r}
+auto.df<-data.frame(auto)
+auto.df$X.horsepower <- as.numeric(as.character(auto.df$X.horsepower))
+auto.df<-na.omit(auto.df)
+summary(auto.df)
+```
+
+Check distribution of response variable 
+
+```{r}
+mpg <- auto.df$mpg 
+h<-hist(mpg, breaks=10, col="red", xlab="Miles Per Gallon", 
+    main="Histogram with Normal Curve") 
+xfit<-seq(min(mpg),max(mpg),length=50) 
+yfit<-dnorm(xfit,mean=mean(mpg),sd=sd(mpg)) 
+yfit <- yfit*diff(h$mids[1:2])*length(mpg) 
+lines(xfit, yfit, col="blue", lwd=2)
+```
+
+Build model on variables that do not include levels
+
+```{r}
+auto.df2 <- subset(auto.df, select = c(mpg, cylinders, displacement, X.horsepower, weight,acceleration))
+
+```
+
+Build a model 
+
+```{r}
+mod <- lm(mpg ~ ., data=auto.df2)
+summary(mod)
+```
+
+Model Validation 
+Residuals
+```{r}
+hist(mod$residuals);
+qqnorm(mod$residuals);
+qqline(mod$residuals)
+```
+
+Constant Variance
+```{r}
+library(olsrr)
+ols_test_breusch_pagan(mod);
+plot(fitted(mod), residuals(mod), xlab="fitted", ylab="residuals")
+abline(h=0)
+```
+
+Based on these residuals, a linear model is not a good fit. The residuals demonstrate the need for some transformation on the response variable. The constant variance check is also a strong indicator that a linear model is not the way to go. 

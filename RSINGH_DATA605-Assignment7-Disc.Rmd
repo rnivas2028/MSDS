@@ -1,0 +1,43 @@
+---
+title: "DATA 605 : Assignment Week 7"
+author: "Ramnivas Singh"
+date: "10/03/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+Given chance of getting 6 is 1/6
+
+Answer a. 
+
+$$  P(T=n)=qn−1 *p $$
+
+$$  P(T=n)=(1-1/6)n−1 *1/6 $$
+Answer b.
+$$  P(T=3)=(1-1/6)^3 $$
+
+```{r}
+result=(1−1/6)**3
+result
+```
+
+Answer c.
+$$ P(T>r+s|T>s)=q^s $$
+
+$$  P(T>6|T>3)=(1-1/6)^3 $$
+
+```{r}
+result=(1−1/6)**3
+result
+```
+

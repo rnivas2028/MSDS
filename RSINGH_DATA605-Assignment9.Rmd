@@ -1,0 +1,166 @@
+---
+title: "DATA 605 : Assignment Week 9"
+author: "Ramnivas Singh"
+date: "10/24/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+
+#### Problem 11 page 363 : The price of one share of stock in the Pilsdorff Beer Company is given by $Y_n$ on the $n$th day of the year. Finn observes that the differences $X_n = Y_{n+1} - Y_n$ appear to be independent random variables with a common distribution having mean $\mu = 0$ and variance $\sigma^2 = 1/4$. If $Y_1 = 100$, estimate the probability that $Y_{365}$ is
+
+#### a. $\ge 100$
+#### b. $\ge 110$
+#### c. $\ge 120$
+
+#### Answer :
+$$
+X_n=Y_{n+1}-Y_n\\
+Y_2=X_1+Y_1\\
+E(Y_2)=E(X_1)+E(Y_1)\\
+=0+100\\
+=100
+$$
+
+$$
+V(Y_2)=V(X_1)+V(Y_1)\\
+=1/4+0\\
+=1/4
+$$
+Apply the same formula and we will find the expected value of Y356 and the variance of Y365
+
+$$
+X_n=Y_{n+1}-Y_n\\
+Y_{n+1}=X_n-Y_n\\
+Y_{365}=X_{364}+...+X_1+Y_1\\
+E(Y_{365})=E(X_{364}+...+X_1+Y_1)\\
+=100
+$$
+$$
+V(Y_{365})=V(X_{364})+...+V(X_1)+V(Y_1)\\
+=364(1/4)\\
+=\frac{365}{4}\\
+\sigma=\sqrt\frac{365}{4} 
+$$
+
+a) 
+
+$$
+\ge100\\
+P(Y_{365}\ge100)=P(Y_{365}-100\ge0)=P(\frac{Y_{365}-100}{\sqrt\frac{365}{4}}\ge0)
+$$
+=0.5 by the central limit theorem
+
+b) 
+
+$$
+\ge110\\
+P(Y_{365}\ge10)=P(Y_{365}-100\ge10)=P(\frac{Y_{365}-100}{\sqrt\frac{365}{4}}\ge \frac{10}{\sqrt\frac{365}{4}})
+$$
+
+=0.147 by the central limit theorem 
+
+c) 
+
+$$
+\ge120\\
+P(Y_{365}\ge20)=P(Y_{365}-100\ge20)=P(\frac{Y_{365}-100}{\sqrt\frac{365}{4}}\ge \frac{20}{\sqrt\frac{365}{4}})
+$$
+=0.018 by the central limit theorem 
+
+***
+
+#### Calculate the expected value and variance of the binomial distribution using the moment generating function.
+
+#### Answer :
+For binomial distribution, $P(X=k) = {n \choose k} p^k q^{n-k}$, where $q=1-p$.
+
+The moment generating function is $M_X(t)=(q+pe^t)^n$.
+
+The first moment is $M'_X(t) = n(q+pe^t)^{n-1}pe^t$.
+
+The expected value is the first moment evaluated at $t=0$:
+
+$$
+\begin{split}
+E(X)=M'_X(0) &= n(q+pe^0)^{n-1}pe^0\\
+&= n(q+p)^{n-1}p\\
+&= np(1-p+p)^{n-1}\\
+&= np1^{n-1}\\
+&=np
+\end{split}
+$$
+
+The second moment is $M''_X(t) = n(n-1)(q+pe^t)^{n-2}p^2 e^{2t}+n(q+pe^t)^{n-1}pe^t$.
+
+Evaluate the second moment at $t=0$:
+
+$$
+\begin{split}
+E(X^2)=M''_X(0) &= n(n-1)(q+pe^0)^{n-2}p^2 e^0+n(q+pe^0)^{n-1}pe^0\\
+&= n(n-1)(1-p+p)^{n-2}p^2+n(1-p+p)^{n-1}p\\
+&= n(n-1)p^2+np
+\end{split}
+$$
+
+The variance is $V(X)=E(X^2)-E(X)^2$:
+
+$$
+\begin{split}
+V(X) &= n(n-1)p^2+np-n^2p^2 \\
+&= np((n-1)p+1-np) \\
+&= np(np-p+1-np) \\
+&= np(1-p) \\
+&= npq
+\end{split}
+$$
+
+We arrived at the known definitions for binomial distribution - $E(X)=np$ and $V(X)=npq$.
+
+***
+
+#### Calculate the expected value and variance of the exponential distribution using the moment generating function 
+
+#### Answer :
+For exponential distribution, $f(x)=\lambda e^{-\lambda x}$.
+
+The moment generating function is $M_X(t)=\frac{\lambda}{\lambda-t}, t<\lambda$.
+
+Using WolframAlpha, we get $M'_X(t) = \frac{\lambda}{(\lambda-t)^2}$ and $M''_X(t) = \frac{2\lambda}{(\lambda-t)^3}$.
+
+Expected value:
+
+$$
+\begin{split}
+E(X)=M'_X(0) &= \frac{\lambda}{(\lambda-0)^2} \\
+&= \frac{\lambda}{\lambda^2}\\
+&= \frac{1}{\lambda}
+\end{split}
+$$
+
+Variance:
+
+$$
+\begin{split}
+V(X) = E(X^2)-E(X)^2 &= M''_X(0)-M'_X(0)^2 \\
+&=\frac{2\lambda}{(\lambda-0)^3} - \frac{1}{\lambda^2}\\
+&=\frac{2\lambda}{\lambda^3} - \frac{1}{\lambda^2}\\
+&=\frac{2}{\lambda^2} - \frac{1}{\lambda^2}\\
+&=\frac{1}{\lambda^2}
+\end{split}
+$$
+
+We arrived at the known definitions for binomial distribution - $E(X)=1/\lambda$ and $V(X)=1/\lambda^2$.
+
+***
+

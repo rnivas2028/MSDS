@@ -1,0 +1,219 @@
+---
+title: "DATA 605 : Assignment Week 6"
+author: "Ramnivas Singh"
+date: "10/03/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+
+1 : A bag contains 5 green and 7 red jellybeans. How many ways can 5 jellybeans be withdrawn from the bag so that the number of green ones withdrawn will be less than 2?
+```{r}
+
+total_beans <- 12
+combination <- function(n,r){return(factorial(n)/(factorial(n-r)*factorial(r)))}
+
+# desired number of green ones = 0 and 1
+desired_case1 <- combination(7,5)
+desired_case2 <- 5*combination(7,4)
+
+total_cases<-desired_case1 + desired_case2
+#How many ways can 5 jellybeans be withdrawn from the bag so that the number of green ones withdrawn will be less than 2?
+total_cases
+```
+
+2. A certain congressional committee consists of 14 senators and 13 representatives. How many ways can a subcommittee of 5 be formed if at least 4 of the members must be representatives?
+```{r}
+combination <- function(n,r){return(factorial(n)/(factorial(n-r)*factorial(r)))}
+total_committee <- 14 + 13
+# desired number of representatives = {4,5}
+desired_case1 <- combination(13,4)*combination(14,1)
+desired_case2 <- combination(13,5)
+desired_cases <- desired_case1 + desired_case2
+# How many ways can a subcommittee of 5 be formed if at least 4 of the members must be representatives?
+desired_cases
+```
+
+3. If a coin is tossed 5 times, and then a standard six-sided die is rolled 2 times, and finally a group of three cards are drawn from a standard deck of 52 cards without replacement, how many different outcomes are possible?
+```{r}
+
+coin_cases <- 2**5
+dice_cases <- 6**2
+cards_cases <- 52*51*50
+total_cases <- coin_cases * dice_cases * cards_cases
+# How many different outcomes are possible
+total_cases
+```
+
+4. 3 cards are drawn from a standard deck without replacement. What is the probability that at least one of the cards drawn is a 3? Express your answer as a fraction or a decimal number rounded to four decimal places.
+```{r}
+#for none to be 3 is
+none3<- 3/4 * 3/4 * 3/4
+#so for at least one to be 3 is
+finalanswer<- 1-(none3)
+finalanswer
+```
+
+
+5. Lorenzo is picking out some movies to rent, and he is primarily interested in documentaries and mysteries. He has narrowed down his selections to 17documentaries and 14 mysteries
+
+Step 1. How many different combinations of 5 movies can he rent?
+Step 2. How many different combinations of 5 movies can he rent if he wants at least one mystery?
+
+```{r}
+combination <- function(n,r){return(factorial(n)/(factorial(n-r)*factorial(r)))}
+permutation <- function(n,r){return(factorial(n)/factorial(n-r))}
+#Given , Number of documentaries = 17
+#Number of mysteries movies = 14
+#Total movies = 17+14=31
+
+completefivemoviesrentcomb<-combination(31,5)
+completefivemoviesrentcomb
+
+#Now, the number of different combinations of 5 movies can she rent if she wants at least one documentary
+
+#firstset< -(1 mystery +4 documentary movies)
+#secondset<-( 2 mystery+3 documentary movies)
+#thirdset<-(4 mystery + 1 documentary)
+#fourthset<-(5 mystery movies)
+#fifthset<-(3 mystery + 2 documentary)
+firstpair<-(combination (14,1) * combination(17,4))
+secondpair<-(combination (14,2) * combination(17,3))
+thirdpair<-(combination (14,4) * combination(17,1))
+fourthpair<-(combination (14,5))
+fifthpair<-(combination (14,3) * combination(17,2))
+totalcomb<-firstpair+secondpair+thirdpair+fourthpair+fifthpair
+totalcomb
+
+#another way=completefivemoviesrentcomb minus complete documentary
+atleastonemystery<-completefivemoviesrentcomb - combination(17,5)
+atleastonemystery
+
+```
+
+6. In choosing what music to play at a charity fund raising event, Cory needs to have an equal number of symphonies from Brahms, Haydn, and Mendelssohn. If he is setting up a schedule of the 9 symphonies to be played, and he has 4 Brahms, 104 Haydn, and 17
+Mendelssohn symphonies from which to choose, how many different schedules are possible? Express your answer in scientific notation rounding to the hundredths place?
+```{r}
+combination <- function(n,r){return(factorial(n)/(factorial(n-r)*factorial(r)))}
+roundtoHundredths <- combination(4,3) * combination(104,3) * combination(17,3)/10^8
+schedules_possible<-roundtoHundredths*(10^8)
+# How many different schedules are possible? Express your answer in scientific notation rounding to the hundredths place
+schedules_possible
+```
+
+7. An English teacher needs to pick 13 books to put on his reading list for the next school year, and he needs to plan the order in which they should be read. He has narrowed down his choices to 6 novels, 6 plays, 7 poetry books, and 5 nonfiction books.
+
+Step 1. If he wants to include no more than 4 nonfiction books, how many different reading schedules are possible? Express your answer in scientific notation rounding to the hundredths place.
+
+
+```{r}
+# Books to pick 13
+# His choices to 6 novels, 6 plays, 7 poetry books, and 5 nonfiction books
+
+total_books=6+6+7+5
+# If he wants to include no more than 4 nonfiction books, than there are 5 different ways for selecting the books
+#1 . No non fiction selected 
+
+desired_case1 <- combination(5,0)*combination(19,13)
+desired_case1
+
+#2 . one non fiction selected 
+desired_case2 <- combination(5,1)*combination(19,12)
+desired_case2
+
+#3 . two non fiction selected 
+desired_case3 <- combination(5,2)*combination(19,11)
+desired_case3
+
+#4 . three non fiction selected 
+desired_case4 <- combination(5,3)*combination(19,10)
+desired_case4
+
+#5 . four non fiction selected 
+desired_case5 <- combination(5,4)*combination(19,9)
+desired_case5
+
+# for each way of selecting 13 books, there would be 13 ! permutations
+
+#If he wants to include no more than 4 nonfiction books, how many different reading schedules are possible
+
+reading_schedules=factorial(13)*(desired_case1+desired_case2+desired_case3+desired_case4+desired_case5)
+round(reading_schedules,digit=3)
+reading_schedules
+```
+
+reading_schedules = 1.51x10^16
+
+Step 2. If he wants to include all 6 plays, how many different reading schedules are possible? Express your answer in scientific notation rounding to the hundredths place.
+```{r}
+# Books to pick 13
+# His choices to 6 novels, 6 plays, 7 poetry books, and 5 nonfiction books
+
+total_books=6+6+7+5
+# If he wants to include all 6 plays, how many different reading schedules are possible? Express your answer in scientific notation rounding to the hundredths place.
+
+#Number of ways to select r items from n, nCr = n!/(r! x (n-r)!)
+books_to_be_selected = 12
+# He wants to include all plays. So, 6 books among the 13 are fixed. remaining 7 books can be selected from 6+7+5 =18 available books
+
+no_selections_possible = combination(6,6)*combination(18,7)
+reading_schedules=factorial(13)*no_selections_possible
+reading_schedules
+```
+reading_schedules = 1.98x10^14
+
+8. Zane is planting trees along his driveway, and he has 5 sycamores and 5 cypress trees to plant in one row. What is the probability that he randomly plants the trees so that all 5 sycamores are next to each other and all 5 cypress trees are next to each other? Express your answer as a fraction or a decimal number rounded to four decimal places.
+
+
+To do this we can assume all cypress trees as 1 unit and sycamores trees as 1 unit. Therefore there are 2 units
+Now, the 2 units can be arranged in 2! ways. Since internally the 6 sycamores and 5 cypress trees will not shuffled we have
+
+
+```{r}
+# Probability that he randomly plants the trees so that all 5 sycamores are next to each other and all 5 cypress trees are next to each other
+result= 2 / (factorial(10)/factorial(5)^2)
+result
+```
+
+9. If you draw a queen or lower from a standard deck of cards, I will pay you $4. If not, you pay me $16. (Aces are considered the highest card in the deck.)
+
+Step 1. Find the expected value of the proposition. Round your answer to two decimal places. Losses must be expressed as negative values.
+
+```{r}
+# Probability(Drawing two or less) = 44/52
+# Probability(Not drawing two or less) = 8/53
+
+expected_amount = 4*(44/52) - 16*(8/52)
+expected_amount
+
+# If i play the game 833 times then total expected loss
+
+```
+
+Step 2. If you played this game 833 times how much would you expect to win or lose? Round your answer to two decimal places. Losses must be expressed as negative values.
+
+
+```{r}
+expected_amount
+
+# If i play the game 833 times then total expected loss
+
+result =833*expected_amount 
+result
+
+# win $ 768.92
+
+```
+
+
+

@@ -1,0 +1,107 @@
+---
+title: "DATA 605 : Assignment Week 8"
+author: "Ramnivas Singh"
+date: "10/17/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+#11 and #14 on page 303 of probability text
+
+#1 on page 320-321
+
+***
+### Exercise #11 (Page 303)
+A company buys 100 light bulbs, each of which has an exponential lifetime of 1000 hours. What is the expected time for the first of these bulbs to burn out? (See Exercise 10.)
+
+Answer : Lifetime of the bulb is exponential. Here we have 100 independent random variables (bulbs) which have an exponential distribution. This exponential density has mean = $\frac {\mu}{n}$, according to question 10.
+
+So as per the formula,
+
+min{X1, X2, X3, ..., Xn} ~ exponential($\sum_{1}^{n}$ $\lambda_i$)
+
+So for this scnerio, min{$X_1$, $X_2$, $X_3$, ..., $X_(100)$} ~ exponential($\sum_{1}^{100}$ $\lambda_i$)
+
+$\lambda_i$ for all i = 1/$\mu$ = 1/1000
+
+So this equals : 100 X 1/1000 = 1/10
+
+Thus expected value = 1 / 1/10 = 10
+
+So expected value of the burn out of first bulb is 10 hours
+
+***
+
+### Exercise #14 (Page 303)
+
+Answer : Assume that $X_{1}$ and $X_{2}$ are independent random variables, each having an exponential density with parameter $\lambda$. Show that $Z = X_{1} - X_{2}$ has density ${f}_{n}(z)=\frac {1}{(n-1)!} {(-log z)}^{n-1}$.
+
+The probability distribution of the sum of two or more independent random variables is the convolution of their individual distributions. The general formula for the distribution of the sum Z = X + Y of two independent integer-valued and discrete random variables is
+
+$P(Z=z)=\sum _{k=-\infty}^{\infty}{P(X=k)P(Y=z-k)}$ 
+
+Let $Y = -X_{2}$, then the counterpart for independent continuously distributed random variables with density functions $f_{X_{1}}, f_{X_{2}}$ is 
+
+$=\int _{-\infty}^{\infty}{{f}_{X_{1}}({x}_{1}){f}_{X_{2}}({x}_{2})dx}$
+
+$=\int _{-\infty}^{\infty}{{f}_{{X}_{1}}({x}_{1}){f}_{ {-X}_{2}}(z-{x}_{1})dx}$
+
+$=\int _{-\infty}^{\infty}{{f}_{ {X}_{1}}({x}_{1}){f}_{{X}_{2}}({x}_{1}-z)dx_{1}}$ 
+
+Now for z < 0, the above can be expressed as the exponential distribution ${f}_{Z}(z)$
+
+$=\int _{0}^{\infty}{\lambda{e}^{-\lambda{x}_{1}}\lambda {e}^{-\lambda {(x}_{1}-z)}d{x}_{1}}$
+
+$=\int _{0}^{\infty }{{\lambda}^{2}{e}^{-2\lambda {x}_{1}}{e}^{\lambda z) }d{x}_{1}}$
+
+$= \lambda {e}^{\lambda z}(-\frac {1}{2} {e }^{-2\lambda {x}_{1}}\overset {\infty}{\underset {0}{|})}$ 
+
+$=\frac {1}{2} \lambda {e}^{\lambda z}$
+
+The question ask for $Z = X_{1} - X_{2}$, but note that $-Z = X_{2} - X_{1}$ and $X_{i}$ are iid, thus Z and -Z have the same distribution that is symmetric around 0, ie ${f}_{Z}(z)={f}_{-Z}(-z)$.
+
+Therefore, for $z \geq 0$, ${f}_{Z}(z)=\frac {1}{2} \lambda {e}^{\lambda (-z)}$. 
+
+And altogether, ${f}_{Z}(z)=\frac {1}{2} \lambda {e}^{-\lambda |z|}$.
+
+
+***
+
+### Exercise #1 (Page 320-321)
+
+Let X be a continuous random variable with mean  ${\mu}={10}$ and variance ${\sigma^2} = {100/3}$. Using Chebyshev's Inequality,find an upper bound for the following probabilities.
+
+(a). $P(|X - 10| \ge 2)$
+
+(b). $P(|X - 10| \ge 5)$
+
+(c). $P(|X - 10| \ge 9)$
+
+(d). $P(|X - 10| \ge 20)$
+
+Answer : 
+
+Chebyshev Inequality: $P(|X-\mu|\ge\epsilon) \le \frac{\sigma^2}{\epsilon^2}$ or, per example 8.4, $P(|X-\mu|\ge k\sigma) \le \frac{1}{k^2}$
+
+As per this problem, $\mu=10$ and $\sigma = \sqrt{\frac{100}{3}} = \frac{10}{\sqrt{3}}$
+
+If $\epsilon = k\sigma$, then $k=\frac{\epsilon}{\sigma} = \frac{\epsilon\sqrt{3}}{10}$
+
+Let $u$ be upper bound in Chebyshev's Inequality, then $u = \frac{1}{k^2} = \frac{1}{(\epsilon\sqrt{3}/10)^2} = \frac{100}{3\epsilon^2}$
+
+a. $\epsilon=2$, the upper bound is $u= \frac{100}{3\times 2^2} = \frac{25}{3} \approx 8.3333$. Since probability cannot be greater than $1$, the upper bound is $1$
+b. $\epsilon=5$, the upper bound is $u= \frac{100}{3\times 5^2} = \frac{4}{3} \approx 1.3333$. Since probability cannot be greater than $1$, the upper bound is $1$
+c. $\epsilon=9$, the upper bound is $u= \frac{100}{3\times 9^2} = \frac{100}{243} \approx 0.4115$
+d. $\epsilon=20$, the upper bound is $u= \frac{100}{3\times 20^2} = \frac{1}{12} \approx 0.0833$
+
+***

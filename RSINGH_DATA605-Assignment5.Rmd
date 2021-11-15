@@ -1,0 +1,232 @@
+---
+title: "DATA 605 : Assignment Week5"
+author: "Ramnivas Singh"
+date: "09/16/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+
+1.(Bayesian). A new test for multinucleoside-resistant (MNR) human immunodeficiency virus type 1
+(HIV-1) variants was recently developed. The test maintains 96% sensitivity, meaning that, for those
+with the disease, it will correctly report “positive” for 96% of them. The test is also 98% specific,
+meaning that, for those without the disease, 98% will be correctly reported as “negative.” MNR HIV-1
+is considered to be rare (albeit emerging), with about a .1% or .001 prevalence rate. Given the
+prevalence rate, sensitivity, and specificity estimates, what is the probability that an individual who is
+reported as positive by the new test actually has the disease? If the median cost (consider this the best
+point estimate) is about $100,000 per positive case total and the test itself costs $1000 per
+administration, what is the total first-year cost for treating 100,000 individuals?
+
+P(A1) = .001 # Actual positive
+
+P(B | A1) = 0.96 # Actual negative
+
+P(B | A2) = 0.98 # Positive test
+
+Using Bayes
+
+P(A1 | B) = P (B|A1)P(A1) / P(B|A1)P(A1)+P(B|A2)P(A1)
+
+```{r}
+print(0.96*0.001/(0.96*0.001+0.98*0.001))
+```
+
+Probability that an individual has the disease who reported as positive is actually around 49.48 %"
+cost_per_case = 100000+1000=101000
+
+On the 100k people, the prevalence says only 1% will be conductive, 100k*0.001 = 100, on which 0.96*100 = 96 can be positive HIV with Disease
+
+```{r}
+treating_cost = 96*1000*100
+treating_cost 
+```
+
+9600 Million Dollar
+
+
+2.(Binomial). The probability of your organization receiving a Joint Commission inspection in any given
+month is .05. What is the probability that, after 24 months, you received exactly 2 inspections? What is
+the probability that, after 24 months, you received 2 or more inspections? What is the probability that
+your received fewer than 2 inspections? What is the expected number of inspections you should have
+received? What is the standard deviation?
+
+Probability that, after 24 months, you received exactly 2 inspections
+
+```{r}
+size <- 24
+prob <-0.05
+x<-2
+dbinom(x,size,prob)
+```
+
+Probability that, after 24 months, you received 2 or more inspections
+```{r}
+# 1- (P(1) +P(0))
+1- (dbinom(1,size,prob) + dbinom(0,size,prob))
+```
+
+Probability that your received fewer than 2 inspections
+```{r}
+dbinom(1,size,prob) + dbinom(0,size,prob)
+```
+
+Expected number of inspections you should have received
+```{r}
+size*prob
+```
+
+Standard deviation
+```{r}
+sqrt(size*prob*(1-prob))
+
+```
+
+3.(Poisson). You are modeling the family practice clinic and notice that patients arrive at a rate of 10 per
+hour. What is the probability that exactly 3 arrive in one hour? What is the probability that more than
+10 arrive in one hour? How many would you expect to arrive in 8 hours? What is the standard
+deviation of the appropriate probability distribution? If there are three family practice providers that can
+see 24 templated patients each day, what is the percent utilization and what are your recommendations?
+
+Probability that exactly 3 arrive in one hour
+```{r}
+dpois(3,10)
+```
+
+Probability that more than 10 arrive in one hour
+```{r}
+ 1-ppois(10,10)
+```
+How many would you expect to arrive in 8 hours
+```{r}
+per_hour <- 10
+8*per_hour
+```
+Standard deviation of the appropriate probability distribution
+```{r}
+sqrt(10)
+```
+If there are three family practice providers that can see 24 templated patients each day, what is the percent utilization and what are your recommendations?
+
+3*24 = 72 patients can be served with 8 hours working. But from above we expect 80 to be expected patients. 11.11% over utilization, so either hire more staff or extend work hours
+```{r}
+80/72*100
+```
+
+4.(Hypergeometric). Your subordinate with 30 supervisors was recently accused of favoring nurses. 15
+of the subordinate’s workers are nurses and 15 are other than nurses. As evidence of malfeasance, the
+accuser stated that there were 6 company-paid trips to Disney World for which everyone was eligible.
+The supervisor sent 5 nurses and 1 non-nurse. If your subordinate acted innocently, what was the
+probability he/she would have selected five nurses for the trips? How many nurses would we have
+expected your subordinate to send? How many non-nurses would we have expected your subordinate to
+send?
+
+Probability he/she would have selected five nurses for the trips
+```{r}
+x<-5
+m<-15
+n<-15
+k<-6
+dhyper(x,m,n,k,log=FALSE)
+```
+
+How many nurses would we have expected your subordinate to send
+```{r}
+15 * 6 / (15 + 15)
+```
+How many non-nurses would we have expected your subordinate to send
+```{r}
+15 * 6 / (15 + 15)
+```
+
+5.(Geometric). The probability of being seriously injured in a car crash in an unspecified location is about
+.1% per hour. A driver is required to traverse this area for 1200 hours in the course of a year. What is
+the probability that the driver will be seriously injured during the course of the year? In the course of 15
+months? What is the expected number of hours that a driver will drive before being seriously injured?
+Given that a driver has driven 1200 hours, what is the probability that he or she will be injured in the
+next 100 hours?
+
+Probability that the driver will be seriously injured during the course of the year
+```{r}
+(1-(1-0.001)^1200) 
+```
+In the course of 15 months?
+```{r}
+(1-(1-0.001)^1500) 
+```
+Expected number of hours that a driver will drive before being seriously injured
+```{r}
+ 1/0.001
+``` 
+Probability that he or she will be injured in the next 100 hours
+```{r}
+pgeom(100, 0.001)
+```
+
+6.You are working in a hospital that is running off of a primary generator which fails about once in 1000
+hours. What is the probability that the generator will fail more than twice in 1000 hours? What is the
+expected value?
+
+Probability that the generator will fail more than twice in 1000 hours
+```{r}
+1 - ppois(2,1)
+```
+
+
+7.A surgical patient arrives for surgery precisely at a given time. Based on previous analysis (or a lack of
+knowledge assumption), you know that the waiting time is uniformly distributed from 0 to 30 minutes.
+What is the probability that this patient will wait more than 10 minutes? If the patient has already
+waited 10 minutes, what is the probability that he/she will wait at least another 5 minutes prior to being
+seen? What is the expected waiting time?
+
+Probability that this patient will wait more than 10 minutes
+```{r}
+q <- 10
+min <- 0
+max <- 30
+1- punif(q,min,max)
+```
+
+Probability that he/she will wait at least another 5 minutes prior to being seen
+```{r}
+PA<-1-punif(15,10,30)
+PB<-1-punif(10,10,30)
+PA/PB
+```
+Expected waiting time
+```{r}
+1/2*(0+30)
+```
+
+8.Your hospital owns an old MRI, which has a manufacturer’s lifetime of about 10 years (expected value).
+Based on previous studies, we know that the failure of most MRIs obeys an exponential distribution.
+What is the expected failure time? What is the standard deviation? What is the probability that your
+MRI will fail after 8 years? Now assume that you have owned the machine for 8 years. Given that you
+already owned the machine 8 years, what is the probability that it will fail in the next two years? 
+
+Expected failure time
+```{r}
+10
+```
+Standard deviation
+```{r}
+10
+```
+Probability that your MRI will fail after 8 years
+```{r}
+lambda <- 1/10
+1 - pexp(8, lambda)
+```
+Probability that it will fail in the next two years
+```{r}
+pexp((10-8),lambda)
+```

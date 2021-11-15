@@ -1,0 +1,34 @@
+---
+title: "DATA 605 : Week 10 - Markov Chains / Random Walks"
+author: "Ramnivas Singh"
+date: "10/31/2021"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+### Chapter 11.3, Page #25 : 
+
+Prove that, in an r-state ergodic chain, it is possible to go from any state to any other state in at most r - 1 steps. 
+
+A Markov chain is ergodic if it is possible to go from every state to every state. It is also known as irreducible. They mean the same thing. As for our proof, we can use some elements of graph theory to make our argument. This markov chain can be associated with a directional graph. The directional part simply tells us the direction to move from one state to another. The vertices on our graph are the states while the edges come from the transition matrix. 
+
+The graph as an edge i to j (where i and j are states) if and only if the following holds 
+
+$$
+P_{ij}>0
+$$
+
+That means there is an edge connecting two states (direction i to j) if and only if the probability of moving from state i to j is greater than 0. In order to say that our transition matrix is ergodic, it means that for any state i, there is some directional path leading to state j. Of course, if we eliminate loops, then a state will not be able to go to its self (state i to i) but we could still have transitions from states i to j. This path will have at most r-1 edges since we eliminate the edge that takes state i to i which is a repeat loop. 
+
+***
+

@@ -1,0 +1,185 @@
+---
+title: "DATA 605 : Week 12 - Regression Analysis in R 2"
+author: "Ramnivas Singh"
+date: "11/14/2021"
+output:
+  pdf_document:
+    toc: no
+    toc_depth: '5'
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = TRUE)
+```
+--------------------------------------------------------------------------------
+### The attached who.csv dataset contains real-world data from 2008. The variables included follow.
+Country: name of the country\
+LifeExp: average life expectancy for the country in years\
+InfantSurvival: proportion of those surviving to one year or more\
+Under5Survival: proportion of those surviving to five years or more\
+TBFree: proportion of the population without TB.\
+PropMD: proportion of the population who are MDs\
+PropRN: proportion of the population who are RNs\
+PersExp: mean personal expenditures on healthcare in US dollars at average exchange rate\
+GovtExp: mean government expenditures per capita on healthcare, US dollars at average exchange rate\
+TotExp: sum of personal and government expenditures.
+
+
+
+#### Provide a scatterplot of LifeExp~TotExp, and run simple linear regression. Do not transform the variables. Provide and interpret the F statistics, R^2, standard error,and p-values only. Discuss whether the assumptions of simple linear regression met. 
+
+
+Read in the data from github 
+```{r}
+who <- read.csv(url("https://raw.githubusercontent.com/vindication09/DATA-605/master/who.csv"), header =TRUE)
+head(who);
+summary(who)
+```
+
+Provide a scatterplot of LifeExp~TotExp, and run simple linear regression. Do not transform the variables. Provide and interpret the F statistics, R^2, standard error,and p-values only. Discuss whether the assumptions of simple linear regression met.
+
+Lets visualize 
+```{r}
+plot(who$LifeExp, who$TotExp, xlab='Average Life Expectancy', ylab='Sum of Government Expenditures', 
+     main='LifeExp vs TotExp')
+```
+
+Run Simple Regression Model 
+```{r}
+mod <- lm(LifeExp~TotExp, data=who)
+summary(mod)
+```
+
+What can we learn about our model from the output? 
+The F-Statistic is 65.26 on 1 and 188 degrees of freedom. A statistics greater than 1 could indicate there is a relationship between response and predictor but how large exactly depends on the number of data points.  The F test is actually testing the model against the null model. Based on the p-value, the model is not equal to the null model. If the null hypothesis is that the model is equal to the null model, then we can reject. 
+
+The adjusted R squared is .2, meaning roughly 20% of the variability in the data is accounted for. The standard error is about 9%,which is larger than what we would want it to be. 
+
+Assumptions of regression
+```{r}
+hist(mod$residuals);
+qqnorm(mod$residuals);
+qqline(mod$residuals)
+```
+
+The residuals are clearly not normal or close to normal. This assumption is not met. 
+
+```{r}
+library(olsrr)
+ols_test_breusch_pagan(mod);
+plot(fitted(mod), residuals(mod), xlab="fitted", ylab="residuals")
+abline(h=0)
+```
+
+Constant variance condition also fails. Observe the high p value for the Breusch Pagan Test for Heteroskedasticity.
+
+There is an abundance of information to indicate that the model is not a good fit at all. 
+
+2) Raise life expectancy to the 4.6 power (i.e., LifeExp^4.6). Raise total expenditures to the 0.06 power (nearly a log transform, TotExp^.06). Plot LifeExp^4.6 as a function of TotExp^.06, and re-run the simple regression model using the transformed variables. Provide and interpret the F statistics, R^2, standard error, and p-values. Which model is "better?"
+
+```{r}
+mod2 <- lm((LifeExp^4.6)~I(TotExp^.06), data=who)
+summary(mod2)
+```
+
+There already is a massive improvement in the adjusted r squared. 72 percent of the variability in the data is accounted for.Our F statistic is much larger (over 500) indicating a strong relationship between predictor and response. 
+
+Residuals 
+```{r}
+hist(mod2$residuals);
+qqnorm(mod2$residuals);
+qqline(mod2$residuals)
+```
+
+Residuals are much closer to the normal distribution than the previous model. 
+
+```{r}
+ols_test_breusch_pagan(mod2);
+plot(fitted(mod2), residuals(mod2), xlab="fitted", ylab="residuals")
+abline(h=0)
+```
+
+With 90% confidence , we can say the variance is constant. 
+
+The transformed model is much better than the original model. It should be noted that the residual standard error in model 2 is much much larger. 
+
+3) Using the results from 3, forecast life expectancy when TotExp^.06 =1.5. Then forecast life expectancy when TotExp^.06=2.5. 
+
+This problem is asking us to find the value of y given x. Lets make a function using the coefficients from model 2
+```{r}
+mod2_compute <- function(x)
+  {   y <- -736527910 + 620060216 * (x)
+      y <- y^(1/4.6)
+    print(y)
+  }
+```
+
+Compute 
+```{r}
+mod2_compute(1.5)
+```
+
+Compute other 
+```{r}
+mod2_compute(2.5)
+```
+
+
+4. Build the following multiple regression model and interpret the F Statistics, R^2, standard error, and p-values. How good is the model?
+
+LifeExp = b0+b1 x PropMd + b2 x TotExp +b3 x PropMD x TotExp
+```{r}
+mod3 <- lm(LifeExp ~ PropMD+TotExp+(PropMD*TotExp), data=who)
+summary(mod3)
+```
+
+The model with additional predictors and interaction terms is better than the original model (mod1). The adjusted r squared is higher. The residual error is slightly smaller. What can we learn from the residuals? 
+
+Residuals
+```{r}
+hist(mod3$residuals);
+qqnorm(mod3$residuals);
+qqline(mod3$residuals)
+```
+
+
+Residuals do not appear normal. There is a heavy right skew. 
+
+```{r}
+ols_test_breusch_pagan(mod3);
+plot(fitted(mod3), residuals(mod3), xlab="fitted", ylab="residuals")
+abline(h=0)
+```
+
+We do not have constant variance. Our third model with interaction term and additional predictors is not a good model and does not satisfy the assumptions of regression. 
+
+5. Forecast LifeExp when PropMD=.03 and TotExp = 14. Does this forecast seem realistic? Why or why not?
+```{r}
+#remove scientific notation with 
+options(scipen=999)
+coef(mod3)
+```
+
+
+```{r}
+mod3_compute <- function(x,y) 
+  {
+  z <- 62.77270325541+1497.49395251893*(x)+(0.00007233324*(x*y))
+  return(z)
+  }
+```
+
+calculate when PropMD=.03 and TotExp = 14
+```{r}
+mod3_compute(0.03,14)
+```
+
+Our predicted life exp is not realistic. The max life exp is around the 80's. 
+
+
+***
+
