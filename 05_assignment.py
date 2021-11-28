@@ -65,32 +65,19 @@ main_page = '''
     # ------ Place code below here \/ \/ \/ ------
 app = Flask(__name__)
 
-# We then use the route() decorator to tell Flask what URL should trigger our function.
-@app.route('/hello')
-# The function is given a name which is also used to generate URLs for that particular function, and returns the message we want to display in the user’s browser.
-def hello_world():
-  return 'Hello, World!'
-
-# 1. Using the flask web server, load the HTML form contained in the variable main_page. The form should load at route '/'.
-@app.route('/')
-def main():
+# use the route() decorator to bind a function to a URL
+@app.route("/") 
+def index():  
   return main_page
 
-# 2. The user should then be able to enter a number and click Calculate at which time the browser will submit an HTTP POST to the web server. 
-@app.route('/calc', methods=['POST'])
-def calc():
-  # 3. The web server will then capture the post, extract the number entered and display the number multiplied by 5 on the browser.
-  if request.method == 'POST': #this block is only entered when the form is submitted
-    number = int(request.form['calc_input'])
-    return '{} * {} = {}'.format(number, 5, number * 5)
-  #return "Unable to Calculate"
+# action="/calc"
+@app.route("/calc", methods = ['POST', 'GET'])
+def calculate():
+  if request.method == 'POST':     
+    a = request.form['numbers']    
+  return 5*float(a)
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
-
-
-
-
+  app.run()
 
     # ------ Place code above here /\ /\ /\ ------
