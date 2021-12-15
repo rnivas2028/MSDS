@@ -1,0 +1,32 @@
+---
+title: "DATA 605 : Week 14 Discussion - Sequence & Series"
+author: "Ramnivas Singh"
+date: "12/05/2021"
+output:
+  pdf_document:
+    toc: no
+    toc_depth: '5'
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE)
+```
+
+## Chapter 8 (Sequence & Series) Section 8 Exercise 13
+
+Show that the Taylor series for $f(x)=e^x$, as given in Key Idea 32, is equal to $f(x)$ by applying Theorem 77; that is show $\lim\limits_{n\to\infty} R_n(x)=0$.
+
+### Solution
+
+Per theorem 76, $|R_n(x)| \le \frac{max|f^{n+1}(z)|}{(n+1)!} |x^{n+1}|$.
+
+Derivative of $e^x$ is $e^x$, so $|R_n(x)| \le \frac{e^z}{(n+1)!} |x^{n+1}|$.
+
+For any $x$, $\lim\limits_{n\to\infty} \frac{e^z x^{n+1}}{(n+1)!} = 0$. That means that $\lim\limits_{n\to\infty} R_n(x) = 0$.
+
+Per theorem 77, $f(x) = \sum\limits_{n=0}^{\infty} \frac{f^{(n)}(c)}{n!} (x-c)^n$. 
+
+Setting $c=0$, $f(x) = \sum\limits_{n=0}^{\infty} \frac{e^0}{n!} (x-0)^n = \sum\limits_{n=0}^{\infty} \frac{x^n}{n!} = e^x$, per Key Idea 32.

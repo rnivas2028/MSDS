@@ -1,0 +1,591 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={DATA 605 : Week15- Functions of Several Variables},
+  pdfauthor={Ramnivas Singh},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{DATA 605 : Week15- Functions of Several Variables}
+\author{Ramnivas Singh}
+\date{12/13/2021}
+
+\begin{document}
+\maketitle
+
+\hypertarget{find-the-equation-of-the-regression-line-for-the-given-points.-round-any-final-values-to-the-nearest-hundredth-if-necessary.}{%
+\subsubsection{1. Find the equation of the regression line for the given
+points. Round any final values to the nearest hundredth, if
+necessary.}\label{find-the-equation-of-the-regression-line-for-the-given-points.-round-any-final-values-to-the-nearest-hundredth-if-necessary.}}
+
+( 5.6, 8.8 ), ( 6.3, 12.4 ), ( 7, 14.8 ), ( 7.7, 18.2 ), ( 8.4, 20.8 )
+
+Inject the data points for x and y and put into adata frame for use
+later
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{x }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\FloatTok{5.6}\NormalTok{, }\FloatTok{6.3}\NormalTok{, }\DecValTok{7}\NormalTok{, }\FloatTok{7.7}\NormalTok{, }\FloatTok{8.4}\NormalTok{)}
+\NormalTok{y }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\FloatTok{8.8}\NormalTok{, }\FloatTok{12.4}\NormalTok{, }\FloatTok{14.8}\NormalTok{, }\FloatTok{18.2}\NormalTok{, }\FloatTok{20.8}\NormalTok{)}
+\NormalTok{df}\OtherTok{\textless{}{-}}\FunctionTok{data.frame}\NormalTok{(x,y)}
+\end{Highlighting}
+\end{Shaded}
+
+Compute the mean of x and y
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{x\_mean }\OtherTok{=} \FunctionTok{mean}\NormalTok{(x)}
+\NormalTok{y\_mean }\OtherTok{=} \FunctionTok{mean}\NormalTok{(y)}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"mean x= "}\NormalTok{, x\_mean))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "mean x= 7"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"mean y= "}\NormalTok{,y\_mean))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "mean y= 15"
+\end{verbatim}
+
+Compute the difference between x points and the mean of x and then
+square that result
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{xdiff }\OtherTok{=}\NormalTok{ x}\SpecialCharTok{{-}}\NormalTok{x\_mean}
+\NormalTok{sq\_xdiff }\OtherTok{=}\NormalTok{ (xdiff)}\SpecialCharTok{\^{}}\DecValTok{2}
+\NormalTok{sq\_xdiff}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 1.96 0.49 0.00 0.49 1.96
+\end{verbatim}
+
+Compute the variance of x
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{var\_x }\OtherTok{=} \FunctionTok{sum}\NormalTok{(sq\_xdiff)}\SpecialCharTok{/}\NormalTok{(}\FunctionTok{length}\NormalTok{(x)}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{)}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"variance of x is "}\NormalTok{, var\_x));}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "variance of x is 1.225"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"Variance using r\textquotesingle{}s function is "}\NormalTok{, }\FunctionTok{var}\NormalTok{(x)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Variance using r's function is 1.225"
+\end{verbatim}
+
+We will also go ahead and take the product of the differences between
+x-x mean and y-y mean. We need to subtract the mean of y from each data
+point in y. We do not need to square that result since that is not in
+the formula required for deriving regression.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ydiff }\OtherTok{=}\NormalTok{ y}\SpecialCharTok{{-}}\NormalTok{y\_mean}
+\NormalTok{xydiff }\OtherTok{=}\NormalTok{ xdiff}\SpecialCharTok{*}\NormalTok{ydiff}
+\end{Highlighting}
+\end{Shaded}
+
+Compute the covariance
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{xycov }\OtherTok{=} \FunctionTok{sum}\NormalTok{(xydiff)}\SpecialCharTok{/}\NormalTok{(}\FunctionTok{length}\NormalTok{(x)}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{)}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"Calculated covariance is "}\NormalTok{, xycov));}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Calculated covariance is 5.215"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"Covariance using r\textquotesingle{}s function is "}\NormalTok{, }\FunctionTok{cov}\NormalTok{(x, y)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Covariance using r's function is 5.215"
+\end{verbatim}
+
+Compute coefficient B0 and B1
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{B1 }\OtherTok{=}\NormalTok{ xycov}\SpecialCharTok{/}\NormalTok{var\_x}
+\NormalTok{B0 }\OtherTok{=}\NormalTok{ y\_mean }\SpecialCharTok{{-}}\NormalTok{ B1}\SpecialCharTok{*}\NormalTok{x\_mean}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"Coefficient B0 is "}\NormalTok{, B0));}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Coefficient B0 is -14.8"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"Coefficient B1 is "}\NormalTok{, B1))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Coefficient B1 is 4.25714285714286"
+\end{verbatim}
+
+Our derived regression line to the nearest hundreth is: \[
+y=B_0+B_1x\\
+y=-14.8+4.26x
+\]
+
+Lets check this model using r's built in functions
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mod}\OtherTok{\textless{}{-}}\FunctionTok{lm}\NormalTok{(y}\SpecialCharTok{\textasciitilde{}}\NormalTok{x,}\AttributeTok{data=}\NormalTok{df)}
+\FunctionTok{summary}\NormalTok{(mod)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = y ~ x, data = df)
+## 
+## Residuals:
+##     1     2     3     4     5 
+## -0.24  0.38 -0.20  0.22 -0.16 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -14.8000     1.0365  -14.28 0.000744 ***
+## x             4.2571     0.1466   29.04 8.97e-05 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.3246 on 3 degrees of freedom
+## Multiple R-squared:  0.9965, Adjusted R-squared:  0.9953 
+## F-statistic: 843.1 on 1 and 3 DF,  p-value: 8.971e-05
+\end{verbatim}
+
+We have verified that we indeed have derived the correct regression
+equation by hand. Lets check some residuals and diagnostics for our
+simple models. I am aware that we only have 5 data points however, in
+terms of method, adding diagnostics to any regression model is simply a
+good practice. I do not expect the residuals to look good and totally
+satisfy the regression requirments.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(olsrr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'olsrr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:datasets':
+## 
+##     rivers
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{res1}\OtherTok{\textless{}{-}}\NormalTok{mod}\SpecialCharTok{$}\NormalTok{residuals}
+\FunctionTok{hist}\NormalTok{(res1);}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{RSINGH_DATA605-Assignment15_files/figure-latex/unnamed-chunk-9-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{qqnorm}\NormalTok{(mod}\SpecialCharTok{$}\NormalTok{residuals)}
+\FunctionTok{qqline}\NormalTok{(mod}\SpecialCharTok{$}\NormalTok{residuals);}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{RSINGH_DATA605-Assignment15_files/figure-latex/unnamed-chunk-9-2.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(}\FunctionTok{fitted}\NormalTok{(mod), }\FunctionTok{residuals}\NormalTok{(mod), }\AttributeTok{xlab=}\StringTok{"fitted"}\NormalTok{, }\AttributeTok{ylab=}\StringTok{"residuals"}\NormalTok{)}
+\FunctionTok{abline}\NormalTok{(}\AttributeTok{h=}\DecValTok{0}\NormalTok{);}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{RSINGH_DATA605-Assignment15_files/figure-latex/unnamed-chunk-9-3.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ols\_test\_breusch\_pagan}\NormalTok{(mod)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Breusch Pagan Test for Heteroskedasticity
+##  -----------------------------------------
+##  Ho: the variance is constant            
+##  Ha: the variance is not constant        
+## 
+##             Data              
+##  -----------------------------
+##  Response : y 
+##  Variables: fitted values of y 
+## 
+##         Test Summary         
+##  ----------------------------
+##  DF            =    1 
+##  Chi2          =    0.3204615 
+##  Prob > Chi2   =    0.5713305
+\end{verbatim}
+
+\hypertarget{find-all-local-maxima-local-minima-and-saddle-points-for-the-function-given-below.-write-your-answers-in-the-form-x-y-z-.-separate-multiple-points-with-a-comma.}{%
+\subsubsection{2. Find all local maxima, local minima, and saddle points
+for the function given below. Write your answer(s) in the form ( x, y, z
+). Separate multiple points with a
+comma.}\label{find-all-local-maxima-local-minima-and-saddle-points-for-the-function-given-below.-write-your-answers-in-the-form-x-y-z-.-separate-multiple-points-with-a-comma.}}
+
+\[
+f(x,y)=24x-6xy^{2}-8y^{3}
+\]
+
+We will be following this tutorial
+\url{http://www.math.ucla.edu/~ronmiech/Calculus_Problems/32A/chap12/section7/819d5/819_5.html}
+
+We need to compute the partial derivatives with respect to x and with
+respect to y. Lets order anything that is not an x,to the front for each
+term/factor \[
+f(x,y)=24x-y^{2}6x-8y^{3}\\
+f_{x}(x, y)=24-6y^{2}
+\]
+
+Repeat the same thing but with respect to y \[
+f(x,y)=24x-6xy^{2}-8y^{3}\\
+f_{y}(x, y)=-12xy-24y^{2}
+\]
+
+We now need to set each partial derivative equal to zero and solve the
+resulting system of two equations and two unknowns. Lets start by
+solving the first partial derivative with respect to x \[
+f_{x}(x, y)=24-6y^{2}=0\\
+24=6y^{2}\\
+4=y^{2}\\
+-2=y\\
+2=y
+\]
+
+Solve the partial derivative with respect to y. We also know y is -2 and
+2 \[
+f_{y}(x, y)=-12xy-24y^{2}=0\\
+-12xy=24y^{2}\\
+x=-2y\\
+x=-2(-2)=4\\
+x=-2(2)=-4
+\]
+
+We have the following points for (x, y,z) however we need to compute z
+for each instance \[
+f(x, y)=z=f(x,y)=24x-6xy^{2}-8y^{3}\\
+(4, -2, z)\\
+(-4, 2, z)
+\]
+
+We can use r to compute those z values instead of plugging in by hand
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{find\_z }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x,y)}
+\NormalTok{  \{}
+\NormalTok{   z }\OtherTok{=} \DecValTok{24}\SpecialCharTok{*}\NormalTok{x}\DecValTok{{-}6}\SpecialCharTok{*}\NormalTok{x}\SpecialCharTok{*}\NormalTok{y}\SpecialCharTok{\^{}}\DecValTok{2{-}8}\SpecialCharTok{*}\NormalTok{y}\SpecialCharTok{\^{}}\DecValTok{3}
+   \FunctionTok{return}\NormalTok{(}\FunctionTok{c}\NormalTok{(z))}
+\NormalTok{\}}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"When x=4 and y={-}2, then z is "}\NormalTok{,}\FunctionTok{find\_z}\NormalTok{(}\DecValTok{4}\NormalTok{,}\SpecialCharTok{{-}}\DecValTok{2}\NormalTok{)));}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "When x=4 and y=-2, then z is 64"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"When x={-}4 and y=2, then z is "}\NormalTok{,}\FunctionTok{find\_z}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{4}\NormalTok{,}\DecValTok{2}\NormalTok{)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "When x=-4 and y=2, then z is -64"
+\end{verbatim}
+
+We have the following critical points \[
+(4, -2, 64)\\
+(-4, 2, -64)
+\]
+
+We now have to test our critical points and determine if they are
+extrema or a saddle point. A saddle point is where a critical point
+exists but does not have any extrema. We need to use the second
+derivative test.
+
+D is defined as \[
+D(x,y)=D=f_(xx)(x,y)f_{yy}(x,y)-[f_{xy}(x, y)]^{2}
+\]
+
+We need to compute a 2nd order partial derivative with respect to x,
+with respect to y, and with respect to xy \[
+f_{x}(x, y)=24-6y^{2}\\
+f_{xx}(x, y)=0
+\]
+
+\[
+f_{y}(x, y)=-12xy-24y^{2}\\
+f_{yy}(x, y)=-12x-48y
+\]
+
+\[
+f_{x}(x, y)=24-6y^{2}\\
+f_{xy}(x, y)=-12y
+\]
+
+Find extrema and saddle points using the following criteria. If
+D\textgreater0 and fxx\textgreater0, then local min if D\textgreater0
+and fxx\textless0 then local max If D\textless0 then saddle point \[
+D(x,y)=D=f_(xx)(x,y)f_{yy}(x,y)-[f_{xy}(x, y)]^{2}\\
+D=(0)(-12x-48y)-[-12y]^{2}\\
+D=-144y^{2}
+\]
+
+D\textless0 for any point, hence we can conclude that our two points are
+saddle points.
+
+\hypertarget{a-grocery-store-sells-two-brands-of-a-product-the-house-brand-and-a-name-brand.-the-manager-estimates-that-if-she-sells-the-house-brand-for-x-dollars-and-the-name-brand-for-y-dollars-she-will-be-able-to-sell-81---21x-17y-units-of-the-house-brand-and-40-11x---23y-units-of-the-name-brand.}{%
+\subsubsection{3. A grocery store sells two brands of a product, the
+``house'' brand and a ``name'' brand. The manager estimates that if she
+sells the ``house'' brand for x dollars and the ``name'' brand for y
+dollars, she will be able to sell 81 - 21x + 17y units of the ``house''
+brand and 40 + 11x - 23y units of the ``name''
+brand.}\label{a-grocery-store-sells-two-brands-of-a-product-the-house-brand-and-a-name-brand.-the-manager-estimates-that-if-she-sells-the-house-brand-for-x-dollars-and-the-name-brand-for-y-dollars-she-will-be-able-to-sell-81---21x-17y-units-of-the-house-brand-and-40-11x---23y-units-of-the-name-brand.}}
+
+Step 1. Find the revenue function R(x,y). We can perform some algebra by
+distributing and combining similar terms where possible \[
+ R(x,y) = (81- 21x + 17y)x + (40 + 11x - 23y)y\\
+ R(x, y)=81x - 21x^2 + 28yx + 40y - 23y^2
+\]
+
+Step 2. What is the revenue if she sells the ``house'' brand for \$2.30
+and the ``name'' brand for \$4.10?
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{find\_r }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x,y)}
+\NormalTok{  \{}
+\NormalTok{   r }\OtherTok{=} \DecValTok{81} \SpecialCharTok{*}\NormalTok{ x }\SpecialCharTok{{-}} \DecValTok{21}\SpecialCharTok{*}\NormalTok{ x}\SpecialCharTok{\^{}}\DecValTok{2} \SpecialCharTok{+} \DecValTok{28} \SpecialCharTok{*}\NormalTok{y}\SpecialCharTok{*}\NormalTok{x }\SpecialCharTok{+} \DecValTok{40}\SpecialCharTok{*}\NormalTok{y  }\SpecialCharTok{{-}} \DecValTok{23}\SpecialCharTok{*}\NormalTok{y}\SpecialCharTok{\^{}}\DecValTok{2}
+   \FunctionTok{return}\NormalTok{(}\FunctionTok{c}\NormalTok{(r))}
+\NormalTok{  \}}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"The revenue is "}\NormalTok{, }\FunctionTok{find\_r}\NormalTok{(}\FloatTok{2.3}\NormalTok{,}\FloatTok{4.1}\NormalTok{)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "The revenue is 116.62"
+\end{verbatim}
+
+\hypertarget{a-company-has-a-plant-in-los-angeles-and-a-plant-in-denver.-the-firm-is-committed-to-produce-a-total-of-96-units-of-a-product-each-week.-the-total-weekly-cost-is-given-by-cx-y-where-x-is-the-number-of-units-produced-in-los-angeles-and-y-is-the-number-of-units-produced-in-denver.-how-many-units-should-be-produced-in-each-plant-to-minimize-the-total-weekly-cost}{%
+\subsubsection{4. A company has a plant in Los Angeles and a plant in
+Denver. The firm is committed to produce a total of 96 units of a
+product each week. The total weekly cost is given by C(x, y), where x is
+the number of units produced in Los Angeles and y is the number of units
+produced in Denver. How many units should be produced in each plant to
+minimize the total weekly
+cost?}\label{a-company-has-a-plant-in-los-angeles-and-a-plant-in-denver.-the-firm-is-committed-to-produce-a-total-of-96-units-of-a-product-each-week.-the-total-weekly-cost-is-given-by-cx-y-where-x-is-the-number-of-units-produced-in-los-angeles-and-y-is-the-number-of-units-produced-in-denver.-how-many-units-should-be-produced-in-each-plant-to-minimize-the-total-weekly-cost}}
+
+lets take some of the concepts used in the previous 2 problems and apply
+it to solve this problem.
+\url{http://links.uwaterloo.ca/math227docs/set4.pdf}
+
+Cost function \[
+c(x,y)=\frac{1}{6}x^{2}+\frac{1}{6}y^{2}+7x+25y+700\\
+\]
+
+We can assume that x+y=total number of units \[
+x+y=96\\
+x=96-y
+\]
+
+This relationship allows us to convert C(x,y) into a univariate
+function. Substitute the above relationship and simplify using algebra.
+\[
+c(x,y)=\frac{1}{6}x^{2}+\frac{1}{6}y^{2}+7x+25y+700\\
+=\frac{1}{6}(96-y)^{2}+\frac{1}{6}y^{2}+7(96-y)+25y+700\\
+C(y)=\frac{1}{3}y^{2}-14y+2908
+\]
+
+Optimize \[
+C'(y)=\frac{2}{3}y-14=0\\
+\frac{2}{3}y=14\\
+2y=42\\
+y=21
+\]
+
+\[
+x=96-y=96-21=75
+\] We found that we need 75 units in La and 21 units in Denver in order
+to minimize the cost.
+
+\hypertarget{evaluate-the-double-integral-on-the-given-region.}{%
+\subsubsection{5. Evaluate the double integral on the given
+region.}\label{evaluate-the-double-integral-on-the-given-region.}}
+
+\[
+\iint_R { { e }^{ 8x+3y }dA } \\
+2\le x \le 4\\
+2 \le y \le 4
+\] Work with the inner integral first and integrate with respect to x
+
+\[
+ \iint _{ 2 }^{ 4 }{ { e }^{ 8x+3y }dxdy } \\
+ \iint _{ 2 }^{ 4 }{ { e }^{ 8x }{e}^{3y}dxdy } \\
+ \int _{ 2 }^{ 4 } ({e}^{3y}) \int _{ 2 }^{ 4 }(e^{8x})dx dy\\
+  \int _{ 2 }^{ 4 } ({e}^{3y})(\frac{e^{32}-e^{16}}{8})dy\\
+  \frac{e^{32}-e^{16}}{8}\int _{ 2 }^{ 4 } ({e}^{3y})dy\\
+ [ \frac{e^{32}-e^{16}}{8}][\frac{e^{12}-e^{6}}{3}]\\
+ e^{16}e^{6}(\frac{e^{16}-1}{8})(\frac{e^{2}-1}{3})\\
+ \frac{e^{16}e^{6}}{24}(e^{16}-1)(e^{2}-1)
+\]
+
+\end{document}
