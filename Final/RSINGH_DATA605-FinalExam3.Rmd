@@ -1,0 +1,281 @@
+---
+title: "DATA 605 : Final Exam"
+author: "Ramnivas Singh"
+date: "12/05/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: no
+    toc_depth: '5'
+---
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, message = FALSE, warning = FALSE)
+library(igraph)
+rm(list = ls())
+library(knitr)
+library(psych)
+library(corrplot)
+library(gmodels)
+library(MASS)
+```
+
+
+# Problem 2
+You are to compete in the House Prices: Advanced Regression Techniques competition
+https://www.kaggle.com/c/house-prices-advanced-regression-techniques . I want you to do the
+following.
+
+**1. Descriptive and Inferential Statistics.** Provide univariate descriptive statistics and appropriate plots for the training data set. Provide a scatterplot matrix for at least two of the independent variables and the dependent variable. Derive a correlation matrix for any three quantitative variables in the dataset. Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide an 80% confidence interval. Discuss the meaning of your analysis. Would you be worried about familywise error? Why or why not?
+
+**2. Linear Algebra and Correlation.** Invert your correlation matrix from above. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix. Conduct LU decomposition on the matrix.
+
+**3. Calculus-Based Probability & Statistics.** Many times, it makes sense to fit a closed form distribution to data. Select a variable in the Kaggle.com training dataset that is skewed to the right, shift it so that the minimum value is absolutely above zero if necessary. Then load the MASS package and run fitdistr to fit an exponential probability density function. (See https://stat.ethz.ch/R-manual/Rdevel/library/MASS/html/fitdistr.html ). Find the optimal value of λ for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., rexp(1000, λ)). Plot a histogram and compare it with a your original variable. Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF). Also generate a 95% confidence interval from the empirical data, assuming normality. Finally, provide the empirical 5th percentile and 95th percentile of the data. Discuss.
+
+**4. Modeling.** Build some type of multiple regression model and submit your model to the competition board. Provide your complete model summary and results with analysis. Report your Kaggle.com user name and score.
+
+
+## Load Dataset
+
+```{r}
+house_prices.train<-read.table("https://raw.githubusercontent.com/rnivas2028/MSDS/Data605/Final/train.csv"
+                     ,sep=",",header=T,stringsAsFactors = T)
+house_prices.test<-read.table("https://raw.githubusercontent.com/rnivas2028/MSDS/Data605/Final/test.csv"
+                     ,sep=",",header=T,stringsAsFactors = T)
+#Print top 5 records from training and test data
+kable(head(house_prices.train[,1:5],5))
+kable(head(house_prices.test[,11:15],5))
+```
+
+***
+
+### 1. Descriptive and Inferential Statistics
+
+```{r}
+# Lets pick fields for working data set
+house_prices_working_data <- house_prices.train[c('LotArea','GrLivArea','SalePrice')] 
+kable(round(describe(house_prices.train)[c(2,3,4,7,8,9,10,11,12,13)],2))   
+```
+
+To understand columns from the dataset, lets plot histogram
+```{r}
+hist(house_prices_working_data$SalePrice, main="Sale Price",xlab="SalePrice",ylab="")
+hist(house_prices_working_data$GrLivArea, main="GrLivArea",xlab="GrLivArea",ylab="")
+hist(house_prices_working_data$LotArea, main="Lot Area",xlab="LotArea",ylab="")
+```
+
+Based on above histogram lot of skew in these few quantitative variables. It's not perfect, but it may be a better way to look at data to be used in a linear regression model.
+
+```{r}
+plot(log(house_prices_working_data[c("GrLivArea","SalePrice")]),main="Log(GrLivArea) vs Log(Sale Price)")
+plot(house_prices_working_data[c("LotArea","SalePrice")],main="LotArea vs Sale Price")
+plot(log(house_prices_working_data[c("LotArea","SalePrice")]),main="Log(LotArea) vs Log(Sale Price)")
+```
+
+***
+
+### Provide a scatter-plot matrix
+
+```{r}
+pairs(house_prices_working_data)
+pairs(log(house_prices_working_data))
+```
+
+The relationship between LotArea and the other variables appears to be slightly positive, but not strong.The scatter matrix shows that there is a strong positive linear relationship between Above Grade Living Aread ("GrLivArea") and Sale price.  
+
+#### Compute the Correlation matrix
+```{r}
+house_prices.corrData <- house_prices.train[c('LotArea','GrLivArea','TotalBsmtSF')] 
+cor.mat <- cor(house_prices.corrData)
+corrplot(cor.mat)
+```
+
+```{r}
+cor.test(house_prices.corrData$LotArea, house_prices.corrData$GrLivArea, method = "pearson" , conf.level = 0.8)
+cor.test(house_prices.corrData$LotArea, house_prices.corrData$TotalBsmtSF, method = "pearson" , conf.level = 0.8)
+cor.test(house_prices.corrData$TotalBsmtSF, house_prices.corrData$GrLivArea, method = "pearson" , conf.level = 0.8)
+```
+
+Above we test each pariwise correlation to see if it is significantly different from zero with each case having the formulation:
+$$
+H_0 : r=0 \\
+H_a : r \ne 0 
+$$
+
+And we see that in all 3 cases, the correlation is significantly different from zero at 80% confidence.  This makes sense given that they are all house-area-related variables and that bigger houses likely have bigger living-space, bigger basements etc.  I believe that based on the family-wise error rate formula (FWER) shown below, we should be concerned here as the probabilty is nearly 50% (0.488) that we have at least 1 false conclusion:
+
+$FWER  \leq 1 - (1-\alpha)^c$ where $\alpha$ is the significance of the tests and $c$ is the number of comparisons performed.  In this case, we get a value of:
+
+```{r}
+FWER <- 1-(1-0.2)^3
+FWER
+```
+
+### 2. Linear Algebra and Correlation
+
+Here we invert the correlation matrix to create a precision matrix and multiply them to see whether we get the same answer independent of order:
+
+```{r}
+precision.mat <- solve(cor.mat) 
+kable(precision.mat)
+pXc <-cor.mat %*% precision.mat
+cXp <- precision.mat %*% cor.mat
+pXc
+cXp
+identical(pXc,cXp)
+```
+
+### LU Decomposition 
+
+For LU Decomposition following function will run it on all three! 
+
+```{r}
+LU <- function(U){
+  colnames(U) <- NULL
+  rownames(U) <- NULL
+  
+  L = diag(x = 1, ncol = ncol(U), nrow = nrow(U))  
+  for (row in 1:dim(U)[1]){
+    col = 1
+    while (col< row) {
+      L[row,col] <- U[row,col] / U[col,col]
+      U[row,] <- -1 * U[row,col]/U[col,col] * U[col,] + U[row,]
+      col = col+1
+    }
+  }
+  return(list('L' = L, 'U' = U))
+}
+corMat.LU <- LU(data.matrix(cor.mat))
+cXp.LU <- LU(data.matrix(cXp))
+pXc.LU<- LU(data.matrix(pXc))
+```
+
+And we display the 3 outputs:
+
+#### Correlation Mat U&L
+
+```{r}
+kable(as.data.frame(corMat.LU$U))
+kable(as.data.frame(corMat.LU$L))
+```
+
+#### C X P Mat U&L
+
+```{r}
+kable(as.data.frame(cXp.LU$U))
+kable(as.data.frame(cXp.LU$L))
+```
+
+#### P X C Mat U&L
+
+```{r}
+kable(as.data.frame(pXc.LU$U))
+kable(as.data.frame(pXc.LU$L))
+```
+
+
+### 3. Calculus-Based Probability & Statistics
+
+Pick a Variable with Right-Skew. Lets pick sale price, which has a reasonable skew
+
+```{r}
+r.skew <- (house_prices.train$SalePrice)
+hist(r.skew,main="Histogram of SalePrice Showing Skew")
+```
+
+#### Fit an Exponential Distribution & Create Histogram
+
+```{r}
+#fit and generate 100 samples
+dist.fit <- fitdistr(r.skew,densfun = "exponential")
+samples <- rexp(1000,dist.fit$estimate)
+#Compare histograms
+hist(r.skew, col=rgb(1,0,0,0.5), breaks = 15, main="Emperical vs Simulated")
+hist(samples, col=rgb(0,0,1,0.5),breaks = 15, add=T)
+box()
+legend("topright", legend=c("Emperical", "Simulated"),
+       col=c("red", "blue"), lty=1:2, cex=0.8)
+```
+
+
+#### Compute percentiles and 95% CI
+
+In addition to the required metrics, I have also shows summary stats as I think they are helpful here:
+
+```{r warning=FALSE}
+#plot
+ci(r.skew,confidence = 0.95)
+describe(r.skew)
+describe(samples)
+```
+
+Above we see a the 95% confidence interval which indicated the range in which we can be 95% confident that the mean of the population will be found.  Given the nature of the distribution, I would suggest staying away from the assumption of normality in this case and using something like bootstrapping instead. If we compare the data for the simulation agains the emperical data, we see that we *do not* get an ideal fit. The empirical data has a similar mean to the simulated data, but a much higher standard deviation and median. 
+Looking at the histograms, we can see a distinct difference in the shapes of the distributions 
+
+***
+
+### 4. Modeling
+
+First we'll run a regression on all the data and take a look at the result.  We want to eliminate variables to the extent that we can. Drop anything that contains an NA and than train the model
+
+```{r}
+df <- house_prices.train[ , apply(house_prices.train, 2, function(x) !any(is.na(x)))]
+m1 <- lm(SalePrice ~ ., data = df)
+```
+
+```{r}
+summary(m1)
+```
+
+From this we can see that it appears as though there are a few variables that are more important than others.  We'll collect those and work with them directly.  It's also worth noting that this model appears to predict a high amount of variability in the target variable ($r^2$ > 0.9) but given the number of variables, we can be reasonably confident that there's some overfitting going on here.  It appears as though we should be able to cut about 75% of the original 80 variables
+
+Lets transform few quantitative variables, including the target variable, using the log() function as a linear model should perform better post-transformation.
+
+```{r}
+df.reduced <-df[c("LotArea","Street","LandContour","LotConfig","LandSlope",
+                  "Neighborhood","Condition2","OverallQual","OverallCond",
+                  "YearBuilt","RoofMatl","ExterQual","BsmtFinSF1","BsmtFinSF2",
+                  "BsmtUnfSF","X1stFlrSF","X2ndFlrSF","KitchenAbvGr","KitchenQual",
+                  "ScreenPorch","PoolArea","SalePrice")]
+df.reduced$LotArea <- log(df.reduced$LotArea) 
+df.reduced$SalePrice <- log(df.reduced$SalePrice) 
+m2 <- lm(SalePrice ~ ., data = df.reduced)
+```
+
+
+```{r}
+summary(m2)
+```
+
+We see a slight reduction in model performance, but it is likely worth it given the reduction in parameters.  Next we'll use look at a few visualizations of the residuals.
+
+```{r}
+in.sample <- predict(m2,data=house_prices.train)
+plot(cbind(exp(in.sample),house_prices.train$SalePrice), main = "In Sample Model Result")
+hist(m2$residuals)
+qqnorm(m2$residuals)
+qqline(m2$residuals) 
+```
+
+Based on my Kaggle performance, the model is much improved, however, using log-transformed data vs. using the raw data as is. This indicates that the model likely doesn't meet the assumptions for linear regression and as such, we don't expect it to perform exceptionally well on kaggle. 
+
+Now lets run model on the test dataset and create an output file which can be loaded to kaggle.
+
+```{r warning=FALSE}
+df.test <-house_prices.test[c("LotArea","Street","LandContour","LotConfig","LandSlope",
+                  "Neighborhood","Condition2","OverallQual","OverallCond",
+                  "YearBuilt","RoofMatl","ExterQual","BsmtFinSF1","BsmtFinSF2",
+                  "BsmtUnfSF","X1stFlrSF","X2ndFlrSF","KitchenAbvGr","KitchenQual",
+                  "ScreenPorch","PoolArea")]
+df.test$LotArea <- log(df.test$LotArea) 
+prediction <- exp(predict(m2, newdata = df.test) )
+prediction[is.na(prediction)] <- mean(prediction, na.rm = TRUE)
+prediction.df  <- as.data.frame(cbind(house_prices.test$Id,prediction))
+        
+colnames(prediction.df) <- c("Id","SalePrice") 
+write.csv(prediction.df, "data_605_result.csv",row.names=F)
+```
+
+The score for the model is ~0.146 which looks like model doesn't perfectly meet the assumptions of linear regression. Model results are available under https://www.kaggle.com/ramnivassingh

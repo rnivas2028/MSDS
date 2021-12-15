@@ -1,0 +1,216 @@
+---
+title: "DATA 605 : Final Exam"
+author: "Ramnivas Singh"
+date: "12/14/2021"
+output:
+  pdf_document:
+    toc: no
+    toc_depth: '5'
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+---
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, message = FALSE, warning = FALSE)
+library(igraph)
+library(dplyr)
+library(keras)
+library(neuralnet)
+library(rsample)
+library(tidyverse)
+rm(list = ls())
+library(knitr)
+library(psych)
+library(corrplot)
+library(gmodels)
+library(MASS)
+
+```
+# Problem 1 - Playing with PageRank
+
+You'll verify for yourself that PageRank works by performing calculations on a small universe of web pages. Let's use the 6 page universe that we had in the previous discussion For this directed graph, perform the following calculations in R.
+
+### Form the A matrix. Then, introduce decay and form the B matrix as we did in the course notes.
+
+#### Answer :
+
+Based on the Toy example with 6 URLs of 6 page universe,  we compute the page rank for each of the web pages. The nodes represent the websites, and the links outgoing from each of these nodes are as follows
+
+```{r}
+input <- c("Webpage Node","Outlinks",
+"Node 1","Node 2",
+"Node 1","Node 3",
+"Node 2","NA",
+"Node 3","Node 1",
+"Node 3","Node 2",
+"Node 3","Node 5",
+"Node 4","Node 5",
+"Node 4","Node 6",
+"Node 5","Node 4",
+"Node 5","Node 6",
+"Node 6","Node 4")
+input <- matrix(input,ncol=2,byrow=TRUE)
+input <- as.table(input, row.names=FALSE)
+input
+```
+
+Transition Matrix : We derive the matrix that represent the nodes with their links based on the above table of website node (Webpage Node) outgoing links (Outlinks)
+
+
+$$A\quad =\quad \left[ \begin{matrix} 0 & 1/2 & 1/2 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 0 \\ 1/3 & 1/3 & 0 & 0 & 1/3 & 0 \\ 0 & 0 & 0 & 0 & 1/2 & 1/2 \\ 0 & 0 & 0 & 1/2 & 0 & 1/2 \\ 0 & 0 & 0 & 1 & 0 & 0 \end{matrix} \right] $$
+
+Initial rank matrix r is given below for this representation
+
+$$A\quad =\quad \left[ \begin{matrix} 1/6 & 1/6 & 1/6 & 1/6 & 1/6 & 1/6 \end{matrix} \right] $$
+
+Above representation shows - Node 2 does not have any outgoing links. So probability (1/6) for the nodes uses Node 2 may passes to these nodes equally.
+
+Decay matrix B : The decay matrix B can be defined as below
+
+$$
+d =0 .85 \\
+B = d * A + (1-d)/ n
+$$
+
+n is the number of nodes
+
+```{r}
+matrix_A  <- matrix(c(0, 1/2, 1/2, 0, 0, 0, 1/6, 1/6, 1/6, 1/6, 1/6, 1/6, 1/3, 1/3, 0, 0, 1/3, 0, 0, 0, 0, 0, 1/2, 1/2, 0, 0, 0, 1/2, 0, 1/2, 0, 0, 0, 1, 0, 0), nrow=6, byrow=T)
+```
+
+```{r}
+#As one column is having a dead end, we need to convert the matrix in stochastic
+
+n=dim(matrix_A)[1]
+stochastic = apply(matrix_A,1,  function(x) if(sum(x)!=1) return(x+ (1/n)) else return(x))
+stochastic
+```
+
+```{r}
+damping_factor = .85 #Damping factor
+identity_matrix = matrix(c(rep(1,36)),ncol =6) #Identity matrix
+number_nodes=dim(matrix_A)[1] #Number of Nodes
+matrix_B= damping_factor*matrix_A+((1-damping_factor)*(identity_matrix/number_nodes)) #Decay from transition matrix
+matrix_B
+```
+***
+
+### Start with a uniform rank vector r and perform power iterations on B till convergence. That is, compute the solution $r = B^n * r$. Attempt this for a sufficiently large n so that r actually converges.
+
+#### Answer :
+
+An 1 by n vector r which represents the PageRank of all the n webpage nodes.
+
+$${ r }_{ i }\quad =\quad \left[ \begin{matrix} 1/6 & 1/6 & 1/6 & 1/6 & 1/6 & 1/6 \end{matrix} \right] $$
+We iteratively perform A * r  such that ,  the page rank converges for all nodes,  at which point 
+$$r\quad =\quad B\quad \times \quad r$$
+
+Lets develop a function 'converge()' which loop through till the pagerank vector stabilizes and return the pagerank vector
+```{r}
+#@param1 probability matrix 
+#@param2 initial page rank vector
+convergence <- function(probability_matrix, page_rank_vector)
+{
+     converged = FALSE
+     iter <- 0
+     page_rank_vector <- rinit
+     while(converged == FALSE)
+     {
+          iter <- iter + 1
+          newrvec <- crossprod(matrix_B, page_rank_vector)
+
+          if (identical(newrvec, page_rank_vector)) 
+          {
+               converged <- TRUE
+          }
+          else{
+               page_rank_vector <- newrvec 
+               converged <- FALSE
+          }
+     }
+     return( list(newrvec, iter))
+}
+```
+
+Initial rank matrix r is given below for this representation. We consider equal page rank for each of the nodes
+```{r}
+rinit <- matrix(c( 1/6, 1/6, 1/6, 1/6, 1/6, 1/6), nrow=6, byrow=T)
+```
+
+Test function convergence()
+```{r}
+vector <- convergence(matrix_B, rinit)
+vector
+```
+
+Converged Vector
+```{r}
+converge<-vector[[1]]
+converge
+```
+
+Total iterations to converge
+```{r}
+iterations<-vector[[2]]
+iterations
+```
+***
+
+### Compute the eigen-decomposition of B and verify that you indeed get an eigenvalue of 1 as the largest eigenvalue and that its corresponding eigenvector is the same vector that you obtained in the previous power iteration method. Further, this eigenvector has all positive entries and it sums to 1.
+
+#### Answer :
+
+Compute the eigen-decomposition of B 
+```{r}
+eigen((matrix_B))$values
+```
+
+Lets verify if largest value is 1
+```{r}
+which.max(eigen((matrix_B))$values)
+```
+
+Find eigenvector for decayed matrix B
+```{r}
+eigen(t(matrix_B))$vectors
+```
+
+Eigenvector for real values
+```{r}
+evec <-Re(eigen(t(matrix_B))$vectors[,1])
+evec <-matrix(evec/sum(evec))
+evec <-round(evec,8)
+evec
+```
+
+Comparing outputs
+```{r}
+converge<-round(vector[[1]],8)
+identical(evec, converge)
+```
+
+After rounding off the values to 8th place, we found that the eigenvector to highest eigenvalue of the matrix B returns same pagerank matrix as the function converge() above in this exam.
+***
+
+### Use the graph package in R and its page.rank method to compute the Page Rank of the graph as given in A. Note that you don't need to apply decay. The package starts with a connected graph and applies decay internally. Verify that you do get the same PageRank vector as the two approaches above.
+
+                      
+### Answer :
+
+```{r}
+adjacency_graph<- graph.adjacency(matrix_A, 'directed', weighted=TRUE)
+plot(adjacency_graph)
+#Page Rank of resultant vector of the graph
+page_rank(adjacency_graph)$vector
+```
+
+Verifying Page Rank vector as the two approaches is same 
+
+```{r}
+
+page_rank_matrix <- round(matrix(page.rank(adjacency_graph)$vector),8)
+identical(page_rank_matrix, converge)
+```
+
+This verification proves that the page rank vector from both the approaches is identical

@@ -1,0 +1,289 @@
+---
+title: "DATA 605 : Final Exam"
+author: "Ramnivas Singh"
+date: "12/13/2021"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: no
+  pdf_document:
+    toc: no
+    toc_depth: '5'
+---
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, message = FALSE, warning = FALSE)
+library(dplyr)
+library(tidyverse)
+library(readr)
+library(RColorBrewer)
+library(ggplot2)
+library(gridExtra)
+library(tsne)
+library(Rtsne)
+library(nnet)
+library(caret)
+library(FNN)
+library(glmnet)
+library(randomForest)
+library(gbm)
+library(e1071)
+```
+
+# 2. Digit Recognizer
+
+Digit Recognizer is one of the basic and first problem that a budding Machine Learning engineer should try their hands on. It is a simple problem where the challenge is to recognize hand-written digits.
+
+### 1. Go to Kaggle.com and build an account if you do not already have one. It is free.
+#### Answer : An existing account used to access Kaggle.com
+
+***
+
+### 2. Go to https://www.kaggle.com/c/digit-recognizer/overview, accept the rules of the competition, and download the data. You will not be required to submit work to Kaggle, but you do need the data.
+#### Answer : 
+
+***
+
+### 3. Using the training.csv file, plot representations of the first 10 images to understand the data format. Go ahead and divide all pixels by 255 to produce values between 0 and 1. (This is equivalent to min-max scaling.)
+
+#### Answer : 
+```{r}
+train <- read.csv("train.csv")
+test <- read.csv("test.csv")
+# Total Rows of training dataset
+nrow(train) # Dataset has 4200 records
+# Total columns of training dataset
+ncol(train) 
+# Total Rows of training dataset
+nrow(test) # Dataset has 4200 records
+# Total columns of training dataset
+ncol(test)
+# Print top records from train dataset
+head(train[1:10])
+
+summary(train[train$label==1, 408])
+
+summary(train[train$label==0, 408])
+
+m<-matrix(unlist(train[12,-1]), nrow=28, byrow = T)
+image(m, col = grey.colors(255))
+      
+flip <- function(matrix){
+    apply(matrix, 2, rev)
+}
+
+digit<-function(x){
+  m<-matrix(unlist(x), nrow=28, byrow=T)
+  m<-t(apply(m, 2, rev))
+  image(m, col=grey.colors(255))
+}
+
+par(mfrow=c(3,4))
+
+for(i in 1:10){
+  digit(train[i, -1])
+}
+
+# divide all pixels by 255 to produce values between 0 and 1.
+
+train_255 <- train/255.0
+test_255 <- test/255.0
+head(train_255[1:10])
+
+# In dataset-remove the first column of label.
+# Create a new data set for this operation apply Min-Max normalization to get a better range to all pixel columns
+normalize <- function(x, na.rm = TRUE) {
+    return((x- min(x)) /(max(x)-min(x)))
+}
+
+train_b <- train %>% select( 2:ncol(.) )
+train_b<- as.data.frame(lapply(train_b[,-1], normalize))
+par(mfrow=c(3,4))
+
+#Removing Missing values from training(train) dataframe
+train[is.na(train)] <- 0
+```
+
+***
+
+### 4. What is the frequency distribution of the numbers in the dataset?
+
+#### Answer :
+
+Frequency Distribution : A frequency distribution is a representation, either in a graphical or tabular format, that displays the number of observations within a given interval or categories. It is also called the Frequency Distribution table. Given this dataset, frequency distribution table shows occurrence of various labels in training dataset. To investigate the balance of the data for each label, function will plot all of them along with their name. A plot for the same is below
+```{r}
+# Table shows numeric representation of frequency distribution
+table(train$label)
+
+# Bar plot chart to show frequency distribution
+barplot(table(train$label), main="Total Number of Digits (Training Set)", col=brewer.pal(10,"Set1"),
+    xlab="Numbers", ylab = "Frequency of Numbers")
+```
+
+***
+
+### 5. For each number, provide the mean pixel intensity. What does this tell you?
+
+#### Answer : 
+To find mean pixel intensity of all of the pixels, we can reshape the dataframe. The output is actually a series, indexed by the original index as well as the pixel label:
+```{r}
+# Lets calculate mean of each row in training data set to find pixel intensity of all of the pixels
+train$intensity <- apply(train[,-1], 1, mean) 
+intensity_by_label <- aggregate (train$intensity, FUN = mean, by = list(train$label))
+# Now lets plot intensity_by_label 
+ggplot(data=intensity_by_label, aes(x=Group.1, y = x)) +
+    geom_bar(stat="identity")+scale_x_discrete(limits=0:9) + xlab("Label of the Digit") + 
+    ylab("Intensity of the digit (Mean)")
+```
+
+We see that pixel values have different intensity across the dataset. 0, 8, 2, 6 are with higher mean pixel intensity where as 1, 4, 7, and with low mean pixel intensity. If we want to bin the intensity values into statistical quantiles, we can do that. Overall digit “0” is the most intense and “1” is the less intense.
+
+Lets plot Histogram for 0, 8, 2, 6
+
+```{r}
+grid.arrange(qplot(subset(train, label ==0)$intensity, binwidth = .5, xlab = "Histogram for 0"),
+qplot(subset(train, label ==8)$intensity, binwidth = .5, xlab = "Histogram for 8"),
+qplot(subset(train, label ==2)$intensity, binwidth = .5, xlab = "Histogram for 2"),
+qplot(subset(train, label ==6)$intensity, binwidth = .5, xlab = "Histogram for 6"),ncol = 4)
+```
+
+Lets plot Histogram for 1, 4, 7, 9
+
+```{r}
+grid.arrange(qplot(subset(train, label ==0)$intensity, binwidth = .5, xlab = "Histogram for 1"),
+qplot(subset(train, label ==8)$intensity, binwidth = .5, xlab = "Histogram for 4"),
+qplot(subset(train, label ==2)$intensity, binwidth = .5, xlab = "Histogram for 7"),
+qplot(subset(train, label ==6)$intensity, binwidth = .5, xlab = "Histogram for 9"),ncol = 4)
+```
+
+***
+
+### 6. Reduce the data by using principal components that account for 95% of the variance. How many components did you generate? Use PCA to generate all possible components (100% of the variance). How many components are possible? Why?
+#### Answer : 
+```{r}
+
+pcaCharts <- function(x) {
+    x.var <- x$sdev ^ 2
+    x.pvar <- x.var/sum(x.var)
+    par(mfrow=c(1,1))
+    plot(x.pvar,xlab="Principal component", ylab="Proportion of variance explained", ylim=c(0,1), type='b')
+    plot(cumsum(x.pvar),xlab="Principal component", ylab="Cumulative Proportion of variance explained", ylim=c(0,1), type='b')
+    screeplot(x,type="l")
+    par(mfrow=c(1,1))
+}
+
+#Reducing data using PCA
+train_norm<-as.matrix(train[,-1])/255
+train_norm_cov <- cov(train_norm)
+pca <- prcomp(train_norm_cov)
+
+pcaCharts(pca)
+
+# Calculate the variance explained by each principal component
+variance_explained<-as.data.frame(pca$sdev^2/sum(pca$sdev^2))
+variance_explained<-cbind(1:785, cumsum(variance_explained))
+colnames(variance_explained)<-c("Number", "Variance")
+variance_explained<-as.data.frame(variance_explained)
+variance_explained
+
+```
+There are around 20 components generated at 95% of variance
+
+***
+
+### 7. Plot the first 10 images generated by PCA. They will appear to be noise. Why?
+#### Answer : 
+
+
+```{r}
+labelClasses <- factor(train$label)
+plot(main="",pca$x, col = labelClasses)
+
+for(i in 1:10){
+  #print(pca$x[i, -1])
+  #digit(pca$x[i, -1])
+}
+
+```
+
+***
+
+### 8. Now, select only those images that have labels that are 8’s. Re-run PCA that accounts for all of the variance (100%). Plot the first 10 images. What do you see?
+#### Answer : 
+```{r}
+train_sub_8<-subset(train, label ==8)
+nrow(train_sub_8)
+pca <- prcomp(train_sub_8)
+pcaCharts(pca)
+par(mfrow=c(3,4))
+for(i in 1:10){
+  digit(train_sub_8[i, -1])
+}
+
+```
+In above images, different type of 8 letters seems to be visible.
+
+***
+
+### 9. An incorrect approach to predicting the images would be to build a linear regression model with y as the digit values and X as the pixel matrix. Instead, we can build a multinomial model that classifies the digits. Build a multinomial model on the entirety of the training set. Then provide its classification accuracy (percent correctly identified) as well as a matrix of observed versus forecast values (confusion matrix). This matrix will be a 10 x 10, and correct classifications will
+be on the diagonal.
+
+#### Answer : 
+```{r}
+# To train the model, we will be using multinom function from nnet package. Once the model is trained, then we will use the summary() function to check the model coefficients.
+# Training the multinomial model
+set.seed(222)
+train <- read.csv("train1.csv")
+
+train[is.na(train)] <- 0
+sample_size = round(nrow(train)*.70) # setting what is 70%
+index <- sample(seq_len(nrow(train)), size = sample_size)
+ 
+train <- train[index, ]
+test <- train[-index, ]
+
+#Build Multinomial Model
+#multinomModel <- multinom(label ~., family = "multinomial", data = train, MaxNWts =100000, maxit=10);
+#summary (multinomModel) # model summary
+
+#predicted_scores <- predict (multinomModel, test, "probs") # predict on multinomModel data
+#predicted_class <- predict (multinomModel, test) # model summary
+
+# Confusion Matrix and Misclassification Error
+#table(predicted_class, test$label)
+#mean(as.character(predicted_class) != as.character(test$label))
+```
+
+A classification accuracy of 93.3% is probably too high. May be it be further improved by improving the model terms. We should try other ML approaches as well for this problem.
+
+```{r}
+# Model fitting 
+Xtrain <- as.matrix(train)
+Xtest <- as.matrix(test)
+ytrain <- train[,1]
+ytest <- test[,1]
+
+# Gradient boosted trees model for multinomial
+outGbm <- gbm.fit(Xtrain,  factor(ytrain), distribution="multinomial",
+                  n.trees=500, interaction.depth=2)
+
+predGbm <- apply(predict(outGbm, Xtest, n.trees=outGbm$n.trees),1,which.max) - 1L
+# Prediction
+predGbm
+
+# lets try Support vector machines for clear confusion matrix
+outSvm <- svm(Xtrain,  factor(ytrain), kernel="radial", cost=1)
+predSvm <- predict(outSvm, Xtest)
+
+# Prediction
+predSvm
+
+# Confusion Matrix
+table(predSvm,ytest)
+
+```
+***
+
+
+
+
