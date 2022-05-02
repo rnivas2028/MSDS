@@ -40,7 +40,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 ## Solution Steps & Approach
 
-* Data Exploration : The crime data training dataset has 14 columns and 466 rows. The columns are predictor variables about the dataset such as age and tax.
+* Data Exploration : The auto insurance training dataset has 26 variables and 8161 observations. Of the variables, 24 of them are predictors for two responses.
 
 * Data Preparation : To prepare the data, we checked for any NA's or missing values. There were none.
 
@@ -61,18 +61,20 @@ library(ggplot2)
 library(dplyr)
 library(corrplot)
 library(MASS)
-library(caret)
 library(RCurl)
 library(pROC)
-library(RCurl)
-library(haven)
+library(tidyverse)
+library(knitr)
+library(corrgram)
+library(reshape2)
+library(Amelia)
 ```
 
 
 ```{r}
 # Loading the data
 train_df = read.csv("https://raw.githubusercontent.com/rnivas2028/MSDS/Data621/HW4/insurance_training_data.csv")
-test_df = read.csv("https://raw.githubusercontent.com/rnivas2028/MSDS/Data621/HW4/insurance-evaluation-data")
+test_df = read.csv("https://raw.githubusercontent.com/rnivas2028/MSDS/Data621/HW4/insurance-evaluation-data.csv")
 head(train_df)
 ```
 
@@ -150,11 +152,40 @@ train_amt_df <- subset(train_df, TARGET_AMT > 0)
 summary(train_amt_df$TARGET_FLAG)
 ```
 
-\clearpage
 
---------------------------------------------------------------------------------
+## Boxplots
 
-# 4.0 Build Models
+The below boxplots show all of the variables listed in the dataset.  This visualization will assist in showing how the data is spread for each variable.
+
+
+```{r}
+ggplot(melt(train_df), aes(x=factor(variable), y=value)) + 
+  facet_wrap(~variable, scale="free") + 
+  geom_boxplot()
+```
+
+
+## Histograms
+
+```{r}
+ggplot(melt(train_df), aes(x=value)) + 
+  facet_wrap(~variable, scale="free") + 
+  geom_histogram(bins=50)
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+corrgram(drop_na(train_df), order=TRUE,
+         upper.panel=panel.cor, main="")
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+missmap(train_df, main = "Missing values vs observed")
+```
+
+
+# 3.0 Build Models
 
 First, we built two models using most predictors as numerics. Then we used the step AIC function to find the best variables for each model.
 
@@ -203,8 +234,9 @@ summary(MLR_all_vars)
 
 --------------------------------------------------------------------------------
 
-# 5.0 Select Models
+# 4.0 Select Models
 
+We used Stepwise AIC (both backward and forward) to do model selection and ended with a Binary Logistic 7661.4
 
 --------------------------------------------------------------------------------
 
