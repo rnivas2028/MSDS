@@ -1,0 +1,193 @@
+
+```{r, message = FALSE, warning = FALSE}
+portfolio_returns_byhand <- eventReactive(input$go, {
+  
+  symbols <- c(input$stock1, input$stock2, input$stock3, input$stock4, input$stock5)
+  
+  prices <- getSymbols(symbols, src = 'yahoo', from = input$date, 
+             auto.assign = TRUE, warnings = FALSE) %>% 
+  map(~Ad(get(.))) %>% 
+  reduce(merge) %>%
+    `colnames<-`(symbols)
+
+  w <- c(input$w1/100, input$w2/100, 
+         input$w3/100, input$w4/100, input$w5/100)
+  
+  asset_returns_long <- 
+      prices %>% 
+      to.monthly(indexAt = "last", OHLC = FALSE) %>% 
+      tk_tbl(preserve_index = TRUE, rename_index = "date") %>%
+      gather(asset, returns, -date) %>% 
+      group_by(asset) %>%  
+      mutate(returns = (log(returns) - log(lag(returns))))
+
+  portfolio_returns_byhand <- 
+    asset_returns_long %>% 
+    tq_portfolio(assets_col = asset, 
+               returns_col = returns, 
+               weights = w,
+               col_rename = "returns")})
+               
+```
+
+```{r}
+
+prices <- eventReactive(input$go, {
+  symbols <- c(input$stock1, input$stock2, input$stock3, input$stock4, input$stock5)
+  
+  prices <- 
+    getSymbols(symbols, src = 'yahoo', from = input$date, 
+               auto.assign = TRUE, warnings = FALSE) %>% 
+    map(~Ad(get(.))) %>% 
+    reduce(merge) %>%
+    `colnames<-`(symbols)
+})
+
+port_rolling_sd_tidy <- eventReactive(input$go, {
+  
+  prices <- prices()
+  
+  w <- c(input$w1/100, input$w2/100, input$w3/100, input$w4/100, input$w5/100)
+  
+  portfolio_returns_tq_rebalanced_monthly <- 
+    prices %>% 
+    to.monthly(indexAt = "last", OHLC = FALSE) %>% 
+    tk_tbl(preserve_index = TRUE, rename_index = "date") %>%
+    slice(-1) %>%
+    gather(asset, returns, -date) %>%
+    group_by(asset) %>% 
+    mutate(returns = (log(returns) - log(lag(returns)))) %>%
+    tq_portfolio(assets_col  = asset, 
+               returns_col = returns,
+               weights     = w,
+               col_rename  = "returns",
+               rebalance_on = "months")
+  
+  window <- input$window
+  
+  port_rolling_sd_tidy <- 
+  portfolio_returns_tq_rebalanced_monthly %>% 
+  tq_mutate(mutate_fun = rollapply,
+            width = window,
+            FUN = sd,
+            col_rename = ("rolling_sd")) %>%
+  select(date, rolling_sd) %>% 
+  na.omit()
+    
+})
+
+```
+
+
+### Volatility
+```{r}
+
+renderHighchart({
+  
+  port_rolling_sd_xts_hc <- 
+    port_rolling_sd_tidy() %>% 
+    tk_xts(date_col = date) %>% 
+    round(., 4) * 100
+  
+  highchart(type = "stock") %>% 
+    hc_title(text = "Rolling Volatility") %>%
+    hc_yAxis(title = list(text = "Volatility"),
+           labels = list(format = "{value}%"),
+           opposite = FALSE) %>% 
+    hc_add_series(port_rolling_sd_xts_hc, 
+                  name = "Portfolio Vol", 
+                  color = "cornflowerblue",
+                  id = "Port") %>%
+    hc_add_theme(hc_theme_flat()) %>%
+    hc_navigator(enabled = FALSE) %>% 
+    hc_scrollbar(enabled = FALSE)
+})
+```
+
+
+```{r}
+prices <- eventReactive(input$go, {
+  
+  symbols <- c(input$stock1, input$stock2, input$stock3, input$stock4, input$stock5)
+  
+  getSymbols(symbols, src = 'yahoo', from = input$date, 
+             auto.assign = TRUE, warnings = FALSE) %>% 
+  map(~Ad(get(.))) %>% 
+  reduce(merge) %>%
+  `colnames<-`(symbols)
+})
+
+
+portfolio_returns_xts <- eventReactive(input$go, {
+  prices <- prices()
+  
+  w <- c(input$w1/100, input$w2/100, input$w3/100, input$w4/100, input$w5/100)
+
+  prices_monthly <- to.monthly(prices, indexAt = "last", OHLC = FALSE)
+  
+  asset_returns_xts <- na.omit(Return.calculate(prices_monthly, method = "log"))
+  
+  portfolio_returns_xts <- 
+    Return.portfolio(asset_returns_xts, weights = w) %>% 
+    `colnames<-`("returns")
+})  
+  
+rolling_skew_xts <- eventReactive(input$go, {
+  
+  rolling_skew_xts <- 
+    rollapply(portfolio_returns_xts(),
+            FUN = skewness,
+            width = input$window) %>% 
+    na.omit()
+
+})
+
+rolling_kurt_xts <- eventReactive(input$go, {
+  rolling_kurt_xts <- 
+    rollapply(portfolio_returns_xts(),
+            FUN = kurtosis,
+            width = input$window) %>% 
+    na.omit()
+
+})
+
+portfolio_returns_tq_rebalanced_monthly <- eventReactive(input$go, {
+  
+  prices <- prices()
+  w <- c(input$w1/100, input$w2/100, input$w3/100, input$w4/100, input$w5/100)
+  
+  asset_returns_long <- 
+      prices %>% 
+      to.monthly(indexAt = "lastof", OHLC = FALSE) %>% 
+      tk_tbl(preserve_index = TRUE, rename_index = "date") %>%
+      gather(asset, returns, -date) %>% 
+      group_by(asset) %>%  
+      mutate(returns = (log(returns) - log(lag(returns))))
+
+  
+  portfolio_returns_tq_rebalanced_monthly <- 
+  asset_returns_long %>%
+  tq_portfolio(assets_col  = asset, 
+               returns_col = returns,
+               weights     = w,
+               col_rename  = "returns",
+               rebalance_on = "months")
+})
+
+```
+
+Row {.tabset .tabset-fade}
+-------------------------------------
+
+### Standard Deviation
+
+```{r}
+renderPlot({
+  portfolio_returns_byhand() %>% 
+    ggplot(aes(x = returns)) +
+    geom_histogram(alpha = 0.25, binwidth = .01, fill = "cornflowerblue") +
+    geom_density(geom = "line", size = 1, color = "red") 
+})
+```
+
+

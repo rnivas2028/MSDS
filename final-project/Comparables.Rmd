@@ -1,0 +1,104 @@
+```{r}
+# market calculations
+
+rfr <- eventReactive(input$go, {input$rfr/100})
+
+window <- eventReactive(input$go, {input$window}) 
+
+
+market_returns <- eventReactive(input$go, {
+  
+    getSymbols("SPY", src = 'yahoo', 
+            from = input$date, 
+             auto.assign = TRUE, 
+             warnings = FALSE) %>% 
+    map(~Ad(get(.))) %>% 
+    reduce(merge) %>%
+    `colnames<-`("SPY") %>% 
+    to.monthly(indexAt = "lastof", 
+               OHLC = FALSE) %>% 
+    Return.calculate(method = "log") %>% 
+    na.omit()  
+})
+
+market_sharpe <- eventReactive(input$go, {
+  
+  SharpeRatio(market_returns(),
+              Rf = rfr(), 
+              FUN = "StdDev")
+})
+
+market_rolling_sharpe <- eventReactive(input$go, {
+  
+  rollapply(market_returns(), 
+            window(), 
+            function(x) 
+            SharpeRatio(x, 
+                        Rf = rfr(), 
+                        FUN = "StdDev")) %>% 
+  na.omit()
+})
+```
+
+```{r}
+# Portfolio calculations
+
+portfolio_returns <- eventReactive(input$go, {
+  
+  symbols <- c(input$stock1, input$stock2, input$stock3, input$stock4, input$stock5)
+  
+  validate(need(input$w1 + input$w2 + input$w3 + input$w4 + input$w5 == 100, 
+                "The portfolio weights must sum to 100%!"))
+  
+  w <- c(input$w1/100, input$w2/100, input$w3/100, input$w4/100, input$w5/100)
+  
+  getSymbols(symbols, src = 'yahoo', from = input$date, 
+             auto.assign = TRUE, warnings = FALSE) %>% 
+  map(~Ad(get(.))) %>% 
+  reduce(merge) %>%
+  `colnames<-`(symbols) %>% 
+  to.monthly(indexAt = "lastof", 
+             OHLC = FALSE) %>% 
+  Return.calculate(method = "log") %>% 
+  na.omit() %>% 
+  Return.portfolio(weights = w)
+  
+})
+
+
+portfolio_rolling_sharpe <- eventReactive(input$go, {
+
+  rollapply(portfolio_returns(),
+            window(),
+            function(x) SharpeRatio(x, 
+                                    Rf = rfr(), 
+                                    FUN = "StdDev")) %>% 
+  na.omit()
+})
+
+portfolio_sharpe <- eventReactive(input$go, {
+  
+  validate(need(input$w1 + input$w2 + input$w3 + input$w4 + input$w5 == 100, "------"))
+  
+  SharpeRatio(portfolio_returns(),
+              Rf = rfr(), 
+              FUN = "StdDev")
+  
+})
+```
+```{r, message = FALSE, warning = FALSE}
+renderHighchart({
+  
+  highchart(type = "stock") %>%
+  hc_title(text = "Market vs. Actual") %>%
+  hc_add_series(portfolio_rolling_sharpe(), name = "Portfolio", color = "cornflowerblue") %>%
+  hc_add_series(market_rolling_sharpe(), name = "Market", color = "green") %>%
+  hc_navigator(enabled = TRUE) %>% 
+  hc_scrollbar(enabled = TRUE) %>% 
+  hc_exporting(enabled = FALSE) %>% 
+  hc_legend(enabled = TRUE, align = "right", verticalAlign = "middle",
+            layout = "vertical")
+
+  
+})
+```

@@ -1,0 +1,157 @@
+---
+title: "Portfolio Optimization (Portop)    | "
+runtime: shiny
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    source_code: embed
+---
+
+
+```{r setup, message = FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(highcharter)
+library(tidyquant)
+library(timetk)
+library(scales)
+library(shiny)
+library(broom)
+library(shinycssloaders)
+
+```
+
+Sidebar {.sidebar}
+=====================================
+  
+```{r}
+
+fluidRow(
+  column(6,
+  textInput("stock1", "Stock 1", "SPY")),
+  column(5,
+  numericInput("w1", "Portfolio %", 25, min = 1, max = 100))
+)  
+
+fluidRow(
+  column(6,
+  textInput("stock2", "Stock 2", "EFA")),
+  column(5,
+  numericInput("w2", "Portfolio %", 25, min = 1, max = 100))
+)
+
+fluidRow(
+  column(6,
+  textInput("stock3", "Stock 3", "IJS")),
+  column(5,
+  numericInput("w3", "Portfolio %", 20, min = 1, max = 100))
+)
+
+fluidRow(
+  column(6,
+  textInput("stock4", "Stock 4", "EEM")),
+  column(5,
+  numericInput("w4", "Portfolio %", 20, min = 1, max = 100))
+)
+
+fluidRow(
+  column(6,
+  textInput("stock5", "Stock 5", "AGG")),
+  column(5,
+  numericInput("w5", "Portfolio %", 10, min = 1, max = 100))
+)
+
+
+fluidRow(
+  column(7,
+  dateInput("date", "Starting Date", "2017-01-01", format = "yyyy-mm-dd"))
+)
+
+fluidRow(
+  column(7,
+  selectInput("rebalance", "Rebalance Frequency",
+              c("Yearly" = "years",
+                "Monthly" = "months",
+                "Weekly" = "weeks"))
+  )
+)
+
+fluidRow(
+  column(5,
+  numericInput("rfr", "RFR%", .03, min = 0, max = 1, step = .0002)),
+  column(5,
+  numericInput("window", "Window", 6, min = 3, max = 24, step = 2))
+)
+
+fluidRow(
+  column(5,
+  numericInput("sim_months", "Months", 120, min = 6, max = 240, step = 6)),
+  column(5,
+  numericInput("sims", "Simulation", 51, min = 31, max = 101, step = 10))
+)
+
+
+portfolio_growth_xts <- eventReactive(input$go, {
+  w <- c(input$w1/100, input$w2/100, input$w3/100, input$w4/100, input$w5/100)
+  
+  symbols <- c(input$stock1, input$stock2, input$stock3, input$stock4, input$stock5)
+  
+  prices <- getSymbols(symbols, src = 'yahoo', from = input$date, 
+             auto.assign = TRUE, warnings = FALSE) %>% 
+  map(~Ad(get(.))) %>% 
+  reduce(merge) %>%
+  `colnames<-`(symbols)
+
+prices_monthly <- to.monthly(prices, indexAt = "last", OHLC = FALSE)
+asset_returns_xts <- na.omit(Return.calculate(prices_monthly, method = "log"))
+
+portfolio_growth_xts <- 
+  Return.portfolio(asset_returns_xts, 
+                   wealth.index = 1, 
+                   weights = w, 
+                   rebalance_on = input$rebalance) %>% 
+  `colnames<-`("growth")
+
+})
+
+actionButton("go", "Submit")
+
+```
+
+
+Portfolio
+=====================================  
+```{r child="Portfolio.Rmd", echo=FALSE}
+# call Portfolio.Rmd for Portfolio visualization
+```
+
+------------------------------------
+
+Comparables
+=====================================  
+```{r child="Comparables.Rmd", echo=FALSE}
+# call Comparables.Rmd for Comparables visualization
+```
+
+------------------------------------
+
+Risk
+=====================================  
+
+Row {.tabset .tabset-fade}
+-------------------------------------
+```{r child="Risk.Rmd", echo=FALSE}
+# call Risk.Rmd for Risk / model visualization
+```
+
+Simulation
+=====================================  
+
+```{r child="Simulation.Rmd", echo=FALSE}
+# call Simulation.Rmd for Simulation visualization
+```
+
+-------------------------------------
+
+
+
