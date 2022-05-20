@@ -1,0 +1,453 @@
+---
+title: "DATA 621 – Business Analytics and Data Mining"
+subtitle: "Homework 5"
+author: "Ramnivas Singh"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: yes
+    toc_depth: 5
+    toc_float:
+      collapsed: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  editor_options:
+   chunk_output_type: inline
+  always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE) 
+```
+
+## Wine Prediction
+Our goal is to explore, analyze and model a dataset containing information on approximately 12,000 commercially available wines. The variables are mostly related to the chemical properties of the wine being sold. The response variable is the number of sample cases of wine that were purchased by wine distribution companies after sampling a wine.  These cases would be used to provide tasting samples to restaurants and wine stores around the United States. The more sample cases purchased, the more likely is a wine to be sold at a high end restaurant.
+
+A large wine manufacturer is studying the data in order to predict  the number of wine cases ordered based upon the wine characteristics. If the wine manufacturer can predict the number of cases, then that manufacturer will be able to adjust their wine offering to maximize sales.
+
+Your objective is to build a count regression model to predict the number of cases of wine that will be sold given certain properties of the wine.
+
+
+#### Load the required libraries
+```{r}
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(mice)
+library(tidyr)
+library(corrplot)
+library(VIM)
+library(MASS)
+library(magrittr)
+library(pscl)
+```
+
+#### Loading data and doing the exploratory data analysis
+```{r}
+wine_raw <- read.csv("https://raw.githubusercontent.com/deepakmongia/Data621/master/HW-5/data/wine-training-data.csv",
+                     header = TRUE, row.names = 1)
+
+print(head(wine_raw))
+
+print(dim(wine_raw))
+print(str(wine_raw))
+print(summary(wine_raw))
+
+```
+
+
+#### Check blank or missing data
+We are now checking if there is any blank or NA data
+```{r}
+### Blank data
+train_missing_df <- data.frame(apply(wine_raw, 2, function(x) length(which(x == ''))))
+print(train_missing_df)
+
+### NA data
+train_na_df1 <- data.frame(apply(wine_raw, 2, function(x) length(which(is.na(x)))))
+print(train_na_df1)
+```
+
+So there is no data with blank column data but there is data with missing or NA column data.
+We will work on imputing this missing / NA data, but let us first explore each column before that.
+
+###### Target variable
+```{r}
+print(unique(wine_raw$TARGET))
+
+table(wine_raw$TARGET)
+barplot(table(wine_raw$TARGET))
+
+class(wine_raw$TARGET)
+
+summary(wine_raw$TARGET)
+```
+
+###### FixedAcidity
+```{r}
+summary(wine_raw$FixedAcidity)
+
+boxplot(wine_raw$FixedAcidity)
+
+ggplot(wine_raw, aes(FixedAcidity)) + geom_histogram()
+
+```
+
+###### VolatileAcidity
+```{r}
+summary(wine_raw$VolatileAcidity)
+
+boxplot(wine_raw$VolatileAcidity)
+
+ggplot(wine_raw, aes(VolatileAcidity)) + geom_histogram()
+```
+
+### CitricAcid
+```{r}
+summary(wine_raw$CitricAcid)
+
+boxplot(wine_raw$CitricAcid)
+
+ggplot(wine_raw, aes(CitricAcid)) + geom_histogram()
+```
+
+### ResidualSugar
+```{r}
+summary(wine_raw$ResidualSugar)
+
+boxplot(wine_raw$ResidualSugar)
+
+ggplot(wine_raw, aes(ResidualSugar)) + geom_histogram()
+
+```
+
+### chlorides
+```{r}
+summary(wine_raw$Chlorides)
+
+boxplot(wine_raw$Chlorides)
+
+ggplot(wine_raw, aes(Chlorides)) + geom_histogram()
+
+```
+
+### FreeSulfurDioxide
+```{r}
+summary(wine_raw$FreeSulfurDioxide)
+
+boxplot(wine_raw$FreeSulfurDioxide)
+
+ggplot(wine_raw, aes(FreeSulfurDioxide)) + geom_histogram()
+
+```
+
+### TotalSulfurDioxide
+```{r}
+summary(wine_raw$TotalSulfurDioxide)
+
+boxplot(wine_raw$TotalSulfurDioxide)
+
+ggplot(wine_raw, aes(TotalSulfurDioxide)) + geom_histogram()
+
+```
+
+### Density
+```{r}
+summary(wine_raw$Density)
+
+boxplot(wine_raw$Density)
+
+ggplot(wine_raw, aes(Density)) + geom_histogram()
+
+```
+
+### pH
+```{r}
+summary(wine_raw$pH)
+
+boxplot(wine_raw$pH)
+
+ggplot(wine_raw, aes(pH)) + geom_histogram()
+
+```
+
+### Sulphates
+```{r}
+summary(wine_raw$Sulphates)
+
+boxplot(wine_raw$Sulphates)
+
+ggplot(wine_raw, aes(Sulphates)) + geom_histogram()
+
+```
+
+### Alcohol
+```{r}
+summary(wine_raw$Alcohol)
+
+boxplot(wine_raw$Alcohol)
+
+ggplot(wine_raw, aes(Alcohol)) + geom_histogram()
+
+```
+
+### LabelAppeal
+```{r}
+summary(wine_raw$LabelAppeal)
+unique(wine_raw$LabelAppeal)
+
+boxplot(wine_raw$LabelAppeal)
+
+ggplot(wine_raw, aes(LabelAppeal)) + geom_histogram()
+
+```
+
+### AcidIndex
+```{r}
+summary(wine_raw$AcidIndex)
+unique(wine_raw$AcidIndex)
+
+boxplot(wine_raw$AcidIndex)
+
+ggplot(wine_raw, aes(AcidIndex)) + geom_histogram()
+
+```
+
+### STARS
+```{r}
+summary(wine_raw$STARS)
+unique(wine_raw$STARS)
+
+boxplot(wine_raw$STARS)
+
+ggplot(wine_raw, aes(STARS)) + geom_histogram()
+
+```
+
+#### Imputing Missing data
+```{r}
+### Imputing missing values
+summary(wine_raw$ResidualSugar)
+
+summary(wine_raw$Chlorides)
+
+summary(wine_raw$FreeSulfurDioxide)
+
+summary(wine_raw$TotalSulfurDioxide)
+
+summary(wine_raw$pH)
+
+summary(wine_raw$Sulphates)
+
+summary(wine_raw$Alcohol)
+
+summary(wine_raw$STARS)
+
+```
+
+As we see above the column STARS has a very big number of data missing, so we won't impute this column. Rather we will remove this column first for our impute efforts and then will put it back to the imputed dataset.
+```{r}
+wine_raw3 <- subset(wine_raw, select = -c(STARS))
+
+aggr_plot3 <- aggr(wine_raw3, col=c('navyblue','red'), 
+                  numbers=TRUE, sortVars=TRUE, 
+                  labels=names(wine_raw3), cex.axis=.7, 
+                  gap=3, ylab=c("Histogram of missing data","Pattern"))
+
+wine_raw_imputed <- mice(data = wine_raw3, m = 1,
+                         method = "pmm", maxit = 5, seed = 500)
+
+wine_raw_imputed_df <- mice::complete(wine_raw_imputed, 1)
+wine_raw_imputed_df_bk <- wine_raw_imputed_df
+
+wine_raw_imputed_df <- cbind(wine_raw_imputed_df, wine_raw[, "STARS"])
+
+colnames(wine_raw_imputed_df)[colnames(wine_raw_imputed_df) == 'wine_raw[, "STARS"]'] <-
+  "STARS"
+
+```
+
+We have imputed all fields except STARS. Let's compare the raw dataset columns having NA and the same columns in the imputed dataset.
+```{r}
+summary(wine_raw$ResidualSugar)
+summary(wine_raw_imputed_df$ResidualSugar)
+
+summary(wine_raw$Chlorides)
+summary(wine_raw_imputed_df$Chlorides)
+
+summary(wine_raw$FreeSulfurDioxide)
+summary(wine_raw_imputed_df$FreeSulfurDioxide)
+
+summary(wine_raw$TotalSulfurDioxide)
+summary(wine_raw_imputed_df$TotalSulfurDioxide)
+
+summary(wine_raw$pH)
+summary(wine_raw_imputed_df$pH)
+
+summary(wine_raw$Sulphates)
+summary(wine_raw_imputed_df$Sulphates)
+
+summary(wine_raw$Alcohol)
+summary(wine_raw_imputed_df$Alcohol)
+
+summary(wine_raw$STARS)
+summary(wine_raw_imputed_df$STARS)
+
+```
+
+
+##### Correlation checks
+Let's build the correlation plot.
+```{r}
+corrMatrix <- round(cor(wine_raw_imputed_df_bk),4)
+
+corrMatrix %>% corrplot(., method = "color", outline = T, 
+                        addgrid.col = "darkgray", order="hclust", 
+                        addrect = 4, rect.col = "black", 
+                        rect.lwd = 5,cl.pos = "b", tl.col = "indianred4", 
+                        tl.cex = 1.0, cl.cex = 1.0, addCoef.col = "white", 
+                        number.digits = 2, number.cex = 0.8, 
+                        col = colorRampPalette(c("darkred","white","dodgerblue4"))(100))
+
+
+```
+
+
+#### Splitting the dataset into test and train dataset
+```{r}
+n <- nrow(wine_raw_imputed_df)
+set.seed(123)
+wine_random_index <- wine_raw_imputed_df[sample(n), ]
+
+wine.train.df <- wine_raw_imputed_df[1:as.integer(0.7*n),]
+
+wine.test.df <- wine_raw_imputed_df[as.integer(0.7*n +1):n, ]
+
+table(wine.test.df$TARGET) / nrow(wine.test.df)
+table(wine.train.df$TARGET) / nrow(wine.train.df)
+
+```
+
+#### Building the first model for counts - using Poisson Regression
+```{r}
+poisson_model1 <- glm(formula = TARGET ~ . - STARS,
+                      data = wine.train.df,
+                      family = poisson)
+
+summary(poisson_model1)
+
+length(predict(poisson_model1, newdata = wine.test.df))
+
+predict_model1_test <- predict(poisson_model1, newdata = wine.test.df, 
+                               type = "response") %>% round(0)
+
+table(Predicted = predict_model1_test, Actual = wine.test.df$TARGET)
+
+```
+
+#### Second Poisson Regression model
+Removing the statistically insignificant variables
+```{r}
+poisson_model2 <- glm(formula = TARGET ~ VolatileAcidity + Alcohol + LabelAppeal +
+                        AcidIndex + FreeSulfurDioxide,
+                      data = wine.train.df,
+                      family = poisson)
+
+summary(poisson_model2)
+
+predict_model2_test <- predict(poisson_model2, newdata = wine.test.df, 
+                               type = "response") %>% round(0)
+
+unique(wine.test.df$TARGET)
+
+table(Predicted = predict_model2_test, Actual = wine.test.df$TARGET)
+
+```
+
+#### Third model - negative Binomial
+```{r}
+nb_model3 <- glm.nb(formula = TARGET ~ . - STARS,
+                    data = wine.train.df)
+
+summary(nb_model3)
+
+predict_model3_test <- predict(nb_model3, newdata = wine.test.df, 
+                               type = "response") %>% round(0)
+
+unique(wine.test.df$TARGET)
+
+table(Predicted = predict_model3_test, Actual = wine.test.df$TARGET)
+
+```
+
+#### Fourth model - negative Binomial 
+Keeping only statistically relevant columns
+```{r}
+nb_model4 <- glm.nb(formula = TARGET ~ VolatileAcidity + Alcohol + LabelAppeal +
+                      AcidIndex + FreeSulfurDioxide,
+                    data = wine.train.df)
+
+summary(nb_model4)
+
+predict_model4_test <- predict(nb_model4, newdata = wine.test.df, 
+                               type = "response") %>% round(0)
+
+
+table(Predicted = predict_model4_test, Actual = wine.test.df$TARGET)
+
+```
+
+#### Fifth model - Zero Inflated Poisson regression
+```{r}
+zero_infl_model5 <- zeroinfl(formula = TARGET ~ VolatileAcidity + Alcohol + 
+                               LabelAppeal + AcidIndex + FreeSulfurDioxide,
+                             data = wine.train.df)
+
+summary(zero_infl_model5)
+
+predict_model5_test_prob <- predict(zero_infl_model5, newdata = wine.test.df, 
+                               type = "prob")
+predict_model5_test_final <- apply(predict_model5_test_prob,1,which.max)
+predict_model5_test_final <- predict_model5_test_final - 1
+table(predict_model5_test_final)
+table(Predicted = predict_model5_test_final, Actual = wine.test.df$TARGET)
+
+```
+
+##### Multiple Linear Regression models
+```{r}
+### Multiple Linear Regression 1
+linear_model6 <- lm(formula = TARGET ~ . - STARS,
+                    data = wine.train.df)
+
+summary(linear_model6) 
+
+### Multiple Linear Regression 2
+linear_model7 <- lm(formula = TARGET ~ VolatileAcidity + FreeSulfurDioxide +
+                      TotalSulfurDioxide + Density + Sulphates + Alcohol +
+                      LabelAppeal + AcidIndex,
+                    data = wine.train.df)
+
+summary(linear_model7) 
+
+predict_model7_test <- predict(linear_model7, newdata = wine.test.df)
+table(round(predict_model7_test,0))
+
+```
+
+Based on the above analysis, we have decided to go with model5  which is zero Inflated Poisson model.
+
+Add 3 new column in `wine_test` for a classification of wine - poor, okay, and good. Poor will be those with scores of 0,1,2,3; 4 will be  okay and more than 4 will be good.
+
+These newly added 3 column will show TRUE and FALSE values based on TARGET.
+
+
+## Reference:
+ 
+ https://stats.idre.ucla.edu/r/dae/negative-binomial-regression/
+ 
+ https://stats.idre.ucla.edu/r/dae/zip/
+ 
