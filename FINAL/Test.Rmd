@@ -1,0 +1,42 @@
+---
+title: "DATA 621 – Business Analytics and Data Mining"
+subtitle: "Homework 5"
+author: "Ramnivas Singh"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: default
+    highlight: espresso
+    toc: yes
+    toc_depth: 5
+    toc_float:
+      collapsed: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  editor_options:
+   chunk_output_type: inline
+  always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE) 
+```
+
+```{r,echo=FALSE}
+# Load required libraries
+library(tidyquant)
+```
+
+```{r}
+options("getSymbols.warning4.0"=FALSE)
+options("getSymbols.yahoo.warning"=FALSE)
+# Downloading Apple price using quantmod
+
+getSymbols("AAPL", from = '2017-01-01',
+           to = "2022-05-20",warnings = FALSE,
+           auto.assign = TRUE)
+
+chart_Series(AAPL['2017-12/2018-03'])
+```
+ 
