@@ -1,0 +1,229 @@
+---
+title: "DATA 622 Homework 4"
+author: "Ramnivas Singh"
+date: "December 24, 2022"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r warning=FALSE}
+library("viridis")
+library(tidyverse)
+library(DataExplorer)
+library(e1071)
+library(caret)
+```
+
+
+### Objective
+
+You get to decide which dataset you want to work on. The data set must be different from the ones used in previous homeworks You can work on a problem from your job, or something you are interested in. You may also obtain a dataset from sites such as Kaggle, Data.Gov, Census Bureau, USGS or other open data portals. Select one of the methodologies studied in weeks 1-10, and one methodology from weeks 11-15 to apply in the new dataset selected. To complete this task:
+
+- describe the problem you are trying to solve.
+- describe your dataset and what you did to prepare the data for analysis. 
+- methodologies you used for analyzing the data
+- what's the purpose of the analysis performed
+- make your conclusions from your analysis. Please be sure to address the business impact (it could be of any domain) of your solution.
+
+### Data Exploration
+
+This Analysis will focus on determining how many funds will be needed for future academic years. This could potentially help allocate funds more efficiently.
+
+I have decided to use data from "data.ny.gov" website, which has a collection of different data sets to choose from and work with. Within this website I found a data set with the Tuition Assistance Program recipients and dollar amount by college and sector group from the year 2000.
+
+We will first load the data, which I have saved in a local folder, and explore it.
+
+```{r warning=FALSE}
+data <- readr::read_csv("TAP_Recipients_Beginning_2000.csv")
+```
+
+The data consists of 7,965 observations and 9 variables. 
+
+```{r}
+dim(data)
+```
+
+The data contain the variables "Academic Year, TAP College Code, Federal School Code, TAP College Name, Sector Type, TAP Sector Group, TAP Recipient Headcount, TAP Recipient FTEs and TAP Recipient Dollars".
+
+```{r}
+head(data)
+```
+
+Since "Sector Type" and "TAP Sector Group" seem like categorical variables we may want to use in our model, let's take a look at how many different categories we would find within each of these variables.
+
+```{r}
+data %>%
+  distinct(`Sector Type`)
+
+data %>%
+  distinct(`TAP Sector Group`)
+```
+
+From the results above, we see that there are 2 categories for "Sector Type" and 9 for "TAP Sector Group". 
+
+Let's also take a look at the structure of the data to determine if any of the variables need transformations:
+
+```{r}
+str(data)
+```
+
+Additionally, the data do not seem to have any missing values as observed in the plot below.
+
+```{r}
+plot_missing(data)
+```
+
+We will also explore any trends that might be found in the "TAP Recipient Dollars" throughout the years.
+
+```{r}
+attrYear <- data %>% group_by(`Academic Year`) %>% summarise("Average TAP Dollar" = mean(`TAP Recipient Dollars`), Count = n())
+```
+
+Below are the first few rows of the subset of the data I created summarizing the average amount of TAP Dollar per year.
+
+```{r}
+head(attrYear)
+```
+
+It seems that TAP Dollar had a steep increase between the years 2009 and 2010 where it reached its peak. From then, it's had its ups and downs but we can see a clear decline from year 2017 and on.
+
+```{r}
+ggplot(attrYear, aes(x=`Academic Year`, y=`Average TAP Dollar`)) + geom_line(color = "tomato2") + labs(x = "Year", y = "AVG TAP", title = "Average TAP Dollar by Year") + geom_point(color = "tomato2")
+```
+
+### Data Preparation
+
+We will create a separate data set in order to maintain the original data and make all the necessary transformations there. First we'll transform the previous variables of interest that were of type character into factor.
+
+```{r}
+data_prepared <- data
+
+#Data type change for columns of interest
+data_prepared$`Sector Type` <- as.factor(data_prepared$`Sector Type`)
+data_prepared$`TAP Sector Group` <- as.factor(data_prepared$`TAP Sector Group`)
+```
+
+We have changed the structure of our variables as it is shown below.
+
+```{r}
+str(data_prepared)
+```
+
+Additionally, the plots below show that more of the TAP allocation goes to the "Public" sector type and the "CUNY" TAP sector group. Something to consider when reviewing our results.
+
+```{r}
+attrSector <- data %>% group_by(`Sector Type`) %>% summarise("Average TAP Dollar" = mean(`TAP Recipient Dollars`), Count = n())
+
+attrGroup <- data %>% group_by(`TAP Sector Group`) %>% summarise("Average TAP Dollar" = mean(`TAP Recipient Dollars`), Count = n())
+```
+
+```{r}
+ggplot(attrSector, aes(x=`Sector Type`, y=`Average TAP Dollar`)) + geom_bar(stat="identity")
+
+ggplot(attrGroup, aes(x=`TAP Sector Group`, y=`Average TAP Dollar`)) + geom_bar(stat="identity")
+```
+
+### Build Models
+
+Here we will train a SVM model and a Neural Networks model and compare their performance to determine which of the two is the most appropriate for our data.
+
+For this assignment I have picked to use a SVM model to train the data as it has been one of the better performing models I have used in previous homeworks. On the other hand, the Neural Network model is one of the more advance techniques in machine learning and we could potentially obtain some interesting results and performance. 
+
+First we will partition the data into 80% train and 20% test. 
+
+```{r}
+# Partition data - train (80%) & test (20%)
+set.seed(1234)
+ind <- sample(2, nrow(data_prepared), replace = T, prob = c(0.8, 0.2))
+train <- data_prepared[ind==1,]
+test <- data_prepared[ind==2,]
+```
+
+We will also "center" and "scale" our data as we will be using variables with different scales in our models.
+
+```{r warning=FALSE}
+trans_train <- preProcess(train, method = c("center", "scale"))
+trans_test <- preProcess(test, method = c("center", "scale"))
+
+train_prep <- predict(trans_train, train)
+test_prep <- predict(trans_test, test)
+```
+
+Next we will tune our SVM model and perform a grid search.
+
+```{r warning=FALSE}
+# perform a grid search
+svm_tune <- tune(svm, `TAP Recipient Dollars` ~ + `Academic Year` + `TAP College Code` + `Sector Type` + `TAP Sector Group`, data = train_prep)
+```
+
+As evident from the results below, the SVM model gave us an R-square of 0.54, RMSE of 0.68 and MAE of 0.35.
+
+```{r}
+#The best model
+best_mod <- svm_tune$best.model
+best_mod_pred <- predict(best_mod, test_prep) 
+
+postResample(pred=best_mod_pred, obs = test_prep$`TAP Recipient Dollars`)
+```
+
+Secondly, we will train a Neural Networks model to compare the results. The first step will be to "one-hot" encode the categorical variables in our data, as the Neural Network model only takes numerical variables.
+
+```{r}
+
+#Select only those variables we'll use in the model
+new_data1 <- select(train_prep, `Academic Year`, `TAP College Code`, `Sector Type`, `TAP Sector Group`, `TAP Recipient Dollars`)
+
+#Use the 'dummyVars' from the caret package to encode
+dmy <- dummyVars(" ~ .", data = new_data1, fullRank = T)
+train_transformed <- data.frame(predict(dmy, newdata = new_data1))
+
+glimpse(train_transformed)
+```
+
+Now we'll do the same for the test set.
+
+```{r}
+new_data2 <- select(test_prep, `Academic Year`, `TAP College Code`, `Sector Type`, `TAP Sector Group`, `TAP Recipient Dollars`)
+
+dmy <- dummyVars(" ~ .", data = new_data2, fullRank = T)
+test_transformed <- data.frame(predict(dmy, newdata = new_data2))
+```
+
+And now we build the Neural Network model:
+
+```{r}
+set.seed(145)
+nnetAvg <- avNNet(train_transformed[1:11], train_transformed$X.TAP.Recipient.Dollars.,
+                  size = 5,
+                  decay = 0.01,
+                  repeats = 5,
+                  linout = TRUE,
+                  trace = FALSE,
+                  maxit = 500)
+      
+                  
+nnetPred <- predict(nnetAvg, newdata = test_transformed[1:11])
+
+postResample(pred = nnetPred, obs = test_transformed$X.TAP.Recipient.Dollars.)
+```
+
+The Neural Network model gave us an R-square of 0.58, RMSE of 0.66 and MAE of 0.36.
+
+
+### Conclusion
+
+As we are able to see above, both models gave us very good R-square values, and they're both very close in their performance based on RMSE and MAE. I would recommend that either model could be used to predict values for "TAP Recipient Dollars" for future academic years. The R-square for both models is also low enough that I would not be concerned about over-fit, and high enough to give us confidence that the model can predict values accurately.
+
+After reviewing and training two different models on the "Tuition Assistance Program recipients and dollar amount by college and sector group" data, I would conclude that any of these two models would be an excellent choice to predict funds for future academic years. 
+
+These results could potentially help allocate funds more effectively and efficiently as it could give administrators a better sense of how much will be needed for future academic years. Our analysis could also help derive predictions for how much funds will be needed in each "Sector Type", "TAP Sector Group" and College, all of which would aid in reducing any shortages or surpluses of funds.
